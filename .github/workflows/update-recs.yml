@@ -1,0 +1,48 @@
+name: Update recs.json (blog recommendations)
+
+on:
+  # Runs every night at 3am Eastern (8am UTC)
+  schedule:
+    - cron: "0 8 * * *"
+  # Lets you run it manually from the Actions tab
+  workflow_dispatch: {}
+
+permissions:
+  contents: write  # allow this workflow to push commits
+
+jobs:
+  update-recs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Run scraper to regenerate recs.json
+        run: node scrape-blog.js
+
+      - name: Commit and push if recs.json changed
+        run: |
+          if git status --porcelain | grep "recs.json"; then
+            echo "Changes detected in recs.json, committing..."
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add recs.json
+            git commit -m "Auto-update recs.json [skip ci]"
+            git push
+          else
+            echo "No changes to recs.json"
+          fi
