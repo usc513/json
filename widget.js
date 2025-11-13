@@ -1,10 +1,14 @@
 (function () {
-  document.addEventListener("DOMContentLoaded", function () {
+  function init() {
     const container = document.getElementById("related-posts");
     if (!container) return;
 
     const feedUrl = container.getAttribute("data-feed-url");
-    const currentSlug = (container.getAttribute("data-current-slug") || "").replace(/^\/|\/$/g, "");
+    const currentSlugAttr = (container.getAttribute("data-current-slug") || "").replace(/^\/|\/$/g, "");
+
+    // If no data-current-slug, fall back to URL
+    const currentSlug = currentSlugAttr || window.location.pathname.replace(/^\/blog\/|\/$/g, "");
+
     const maxItems = parseInt(container.getAttribute("data-max-items") || "3", 10);
 
     if (!feedUrl) {
@@ -20,7 +24,6 @@
         return res.json();
       })
       .then(function (data) {
-        // Squarespace JSON usually has items on data.items or data.collection.items
         const items = data.items || (data.collection && data.collection.items) || [];
         if (!items.length) {
           console.warn("[RelatedPosts] No items found in JSON feed.");
@@ -31,17 +34,27 @@
           const fullUrl = item.fullUrl || item.url || "";
           const url = fullUrl;
           const title = item.title || "Untitled";
-          const tags = item.tags || item.categories || [];
+
+          // Normalize tags: Strings or objects with `.name`
+          let tags = item.tags || item.categories || [];
+          if (Array.isArray(tags)) {
+            tags = tags.map(function (t) {
+              if (typeof t === "string") return t;
+              if (t && typeof t === "object" && t.name) return t.name;
+              return "";
+            }).filter(Boolean);
+          } else {
+            tags = [];
+          }
+
           const excerpt = item.excerpt || item.body || "";
           const assetUrl =
             item.assetUrl ||
             (item.media && item.media[0] && item.media[0].url) ||
             "";
 
-          // Try to derive a slug from the URL: /blog/this-is-the-slug/
           let slugFromUrl = "";
           try {
-            // If URL is relative, prepend dummy origin
             const u = fullUrl.startsWith("http")
               ? new URL(fullUrl)
               : new URL(fullUrl, "https://example.com");
@@ -55,7 +68,7 @@
             raw: item,
             url: url,
             title: title,
-            tags: Array.isArray(tags) ? tags : [],
+            tags: tags,
             excerpt: excerpt,
             assetUrl: assetUrl,
             slug: slugFromUrl
@@ -79,17 +92,12 @@
             "[RelatedPosts] Could not find current post in feed. Slug:",
             currentSlug
           );
-          // We can still render "recent posts" if we want
         }
 
-        const currentTags = new Set(
-          (currentPost && currentPost.tags) || []
-        );
+        const currentTags = new Set((currentPost && currentPost.tags) || []);
 
-        // Score posts by how many tags they share with the current post
         const scored = normalized
           .filter(function (p) {
-            // Exclude current post
             if (currentPost && p.url === currentPost.url) return false;
             return true;
           })
@@ -98,15 +106,13 @@
 
             if (currentTags.size > 0) {
               p.tags.forEach(function (tag) {
-                if (currentTags.has(tag)) score += 2; // weighted for shared tags
+                if (currentTags.has(tag)) score += 2;
               });
             }
 
-            // Optional: slight bump based on published date if available
             const timestamp =
               p.raw && (p.raw.publishOn || p.raw.firstPublishedOn || p.raw.timestamp);
             if (timestamp) {
-              // newer posts get a tiny bump
               score += (Number(timestamp) || 0) / 1000000000000;
             }
 
@@ -130,7 +136,13 @@
       .catch(function (err) {
         console.error("[RelatedPosts] Error fetching or processing feed:", err);
       });
-  });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
 
   function renderRelatedPosts(container, posts) {
     const wrapper = document.createElement("div");
@@ -154,7 +166,6 @@
 
       li.appendChild(a);
 
-      // Optional: show tags under the title
       if (post.tags && post.tags.length) {
         const tags = document.createElement("div");
         tags.className = "related-post-tags";
@@ -167,7 +178,6 @@
 
     wrapper.appendChild(list);
 
-    // Clear any placeholder text and inject
     container.innerHTML = "";
     container.appendChild(wrapper);
   }
