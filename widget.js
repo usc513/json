@@ -1,5 +1,5 @@
 (function () {
-  // Run when DOM is ready
+
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);
   } else {
@@ -7,41 +7,27 @@
   }
 
   function init() {
-    console.log("[RelatedPosts] init");
-
     const container = document.getElementById("related-posts");
-    if (!container) {
-      console.warn("[RelatedPosts] No #related-posts container found.");
-      return;
-    }
+    if (!container) return;
 
     const feedUrl = container.getAttribute("data-feed-url");
     const maxItems = parseInt(container.getAttribute("data-max-items") || "3", 10);
 
     if (!feedUrl) {
-      console.warn("[RelatedPosts] Missing data-feed-url on #related-posts.");
-      container.textContent = "Missing feed URL.";
+      container.textContent = "Feed URL missing.";
       return;
     }
 
-    console.log("[RelatedPosts] Fetching feed:", feedUrl);
+    container.textContent = "Loading related posts...";
 
     fetch(feedUrl)
-      .then(function (res) {
-        if (!res.ok) throw new Error("Failed to load JSON feed: " + res.status);
-        return res.json();
-      })
-      .then(function (data) {
-        console.log("[RelatedPosts] Raw data keys:", Object.keys(data));
-
+      .then(r => r.json())
+      .then(data => {
         let items = [];
-        if (Array.isArray(data.items)) {
-          items = data.items;
-        } else if (data.collection && Array.isArray(data.collection.items)) {
-          items = data.collection.items;
-        }
 
-        console.log("[RelatedPosts] items.length =", items.length);
+        if (Array.isArray(data.items)) items = data.items;
+        else if (data.collection && Array.isArray(data.collection.items))
+          items = data.collection.items;
 
         if (!items.length) {
           container.textContent = "No related posts found.";
@@ -50,42 +36,51 @@
 
         const posts = items.map(normalizePost);
 
-        // Figure out the current post URL so we can exclude it
-        const currentPath = window.location.pathname.replace(/\/+$/, ""); // trim trailing slash
-        const currentFull = window.location.origin + currentPath;
-        console.log("[RelatedPosts] currentPath:", currentPath);
+        const currentPath = window.location.pathname.replace(/\/+$/, "");
 
-        const filtered = posts.filter(function (p) {
+        const filtered = posts.filter(p => {
           if (!p.url) return false;
           const postPath = p.url.replace(window.location.origin, "").replace(/\/+$/, "");
-          return postPath !== currentPath; // exclude current post
+          return postPath !== currentPath;
         });
 
-        console.log("[RelatedPosts] filtered count (excluding current):", filtered.length);
-
-        // Sort by publishOn (newest first) if available
-        filtered.sort(function (a, b) {
-          const ta = a.publishOn || 0;
-          const tb = b.publishOn || 0;
-          return tb - ta;
-        });
+        filtered.sort((a, b) => b.publishOn - a.publishOn);
 
         const top = filtered.slice(0, maxItems);
+
         if (!top.length) {
           container.textContent = "No related posts found.";
           return;
         }
 
-        renderRelatedPosts(container, top);
+        render(top, container);
       })
-      .catch(function (err) {
-        console.error("[RelatedPosts] Error fetching or processing feed:", err);
+      .catch(err => {
+        console.error("[RelatedPosts] fetch error", err);
         container.textContent = "Unable to load related posts.";
       });
   }
 
+  // CLEAN + FIXED NORMALIZER
   function normalizePost(item) {
     const fullUrl = item.fullUrl || item.url || "";
+
+    let slug = "";
+    try {
+      const u = fullUrl.startsWith("http")
+        ? new URL(fullUrl)
+        : new URL(fullUrl, window.location.origin);
+      const seg = u.pathname.split("/").filter(Boolean);
+      slug = seg[seg.length - 1] || "";
+    } catch (e) {}
+
+    // Tags
+    let tags = [];
+    if (Array.isArray(item.tags)) {
+      tags = item.tags
+        .map(t => (typeof t === "string" ? t : (t && t.name) || ""))
+        .filter(Boolean);
+    }
 
     // Excerpt
     let excerpt = "";
@@ -93,22 +88,13 @@
     else if (item.body) excerpt = stripHtml(item.body);
     if (excerpt.length > 200) excerpt = excerpt.slice(0, 197) + "...";
 
-    // Thumbnail
+    // Thumbnail (this is what Squarespace provides)
     const thumbnail = item.assetUrl || "";
-
-    // Tags (not used yet, but we keep them for future)
-    let tags = [];
-    if (Array.isArray(item.tags)) {
-      tags = item.tags
-        .map(function (t) {
-          return typeof t === "string" ? t : (t && t.name) || "";
-        })
-        .filter(Boolean);
-    }
 
     return {
       raw: item,
       url: fullUrl,
+      slug: slug,
       title: item.title || "Untitled",
       excerpt: excerpt,
       thumbnail: thumbnail,
@@ -118,53 +104,42 @@
   }
 
   function stripHtml(html) {
-    return html ? html.replace(/<[^>]*>/g, "").trim() : "";
+    const d = document.createElement("div");
+    d.innerHTML = html || "";
+    return d.textContent || "";
   }
 
-  function renderRelatedPosts(container, posts) {
-    console.log("[RelatedPosts] Rendering", posts.length, "posts");
-
+  function render(posts, container) {
     const wrapper = document.createElement("div");
-    wrapper.className = "related-posts-widget";
+    wrapper.className = "related-posts-wrapper";
 
-    const heading = document.createElement("h3");
-    heading.textContent = "Related Posts";
-    wrapper.appendChild(heading);
+    posts.forEach(p => {
+      const card = document.createElement("div");
+      card.className = "related-post";
 
-    const grid = document.createElement("div");
-    grid.className = "related-posts-grid";
+      const img = document.createElement("img");
+      img.className = "related-post-thumb";
+      img.src = p.thumbnail;
+      img.alt = p.title;
 
-    posts.forEach(function (post) {
-      const card = document.createElement("a");
-      card.href = post.url;
-      card.className = "related-post-card";
+      const title = document.createElement("h4");
+      title.textContent = p.title;
 
-      if (post.thumbnail) {
-        const img = document.createElement("img");
-        img.src = post.thumbnail;
-        img.alt = post.title;
-        img.className = "related-post-thumb";
-        card.appendChild(img);
-      }
+      const excerpt = document.createElement("p");
+      excerpt.textContent = p.excerpt;
 
-      const title = document.createElement("div");
-      title.className = "related-post-title";
-      title.textContent = post.title;
-      card.appendChild(title);
+      const link = document.createElement("a");
+      link.href = p.url;
+      link.appendChild(img);
+      link.appendChild(title);
 
-      if (post.excerpt) {
-        const excerpt = document.createElement("div");
-        excerpt.className = "related-post-excerpt";
-        excerpt.textContent = post.excerpt;
-        card.appendChild(excerpt);
-      }
-
-      grid.appendChild(card);
+      card.appendChild(link);
+      card.appendChild(excerpt);
+      wrapper.appendChild(card);
     });
-
-    wrapper.appendChild(grid);
 
     container.innerHTML = "";
     container.appendChild(wrapper);
   }
+
 })();
