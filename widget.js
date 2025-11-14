@@ -1,7 +1,12 @@
 (function () {
-  document.addEventListener("DOMContentLoaded", function () {
+  function initRelatedPosts() {
+    console.log("[RelatedPosts] init");
+
     const container = document.getElementById("related-posts");
-    if (!container) return;
+    if (!container) {
+      console.warn("[RelatedPosts] #related-posts container not found.");
+      return;
+    }
 
     const feedUrl = container.getAttribute("data-feed-url");
     const currentSlug = (container.getAttribute("data-current-slug") || "").replace(/^\/|\/$/g, "");
@@ -9,20 +14,38 @@
 
     if (!feedUrl) {
       console.warn("[RelatedPosts] Missing data-feed-url on #related-posts.");
+      container.textContent = "No related posts available.";
       return;
     }
+
+    console.log("[RelatedPosts] Fetching feed:", feedUrl, "slug:", currentSlug);
 
     fetch(feedUrl)
       .then(function (res) {
         if (!res.ok) {
-          throw new Error("Network response was not ok");
+          throw new Error("Network response was not ok: " + res.status);
         }
         return res.json();
       })
       .then(function (data) {
-        const items = data.items || (data.collection && data.collection.items) || [];
+        // Be generous in what we accept as "items"
+        let items = [];
+
+        if (Array.isArray(data.items)) {
+          items = data.items;
+        } else if (data.collection && Array.isArray(data.collection.items)) {
+          items = data.collection.items;
+        } else if (Array.isArray(data)) {
+          items = data;
+        } else if (Array.isArray(data.blogItems)) {
+          items = data.blogItems;
+        }
+
+        console.log("[RelatedPosts] items length:", items.length);
+
         if (!items.length) {
           console.warn("[RelatedPosts] No items found in JSON feed.");
+          container.textContent = "No related posts found.";
           return;
         }
 
@@ -76,11 +99,10 @@
             "[RelatedPosts] Could not find current post in feed. Slug:",
             currentSlug
           );
+          // We'll still proceed and just show "recent-ish" posts
         }
 
-        const currentTags = new Set(
-          (currentPost && currentPost.tags) || []
-        );
+        const currentTags = new Set((currentPost && currentPost.tags) || []);
 
         const scored = normalized
           .filter(function (p) {
@@ -92,7 +114,7 @@
 
             if (currentTags.size > 0) {
               p.tags.forEach(function (tag) {
-                if (currentTags.has(tag)) score += 2;
+                if (currentTags.has(tag)) score += 2; // shared tags weighted
               });
             }
 
@@ -113,7 +135,8 @@
         });
 
         if (!top.length) {
-          console.info("[RelatedPosts] No related posts to display.");
+          console.info("[RelatedPosts] No related posts to display after scoring.");
+          container.textContent = "No related posts found.";
           return;
         }
 
@@ -121,8 +144,9 @@
       })
       .catch(function (err) {
         console.error("[RelatedPosts] Error fetching or processing feed:", err);
+        container.textContent = "Unable to load related posts.";
       });
-  });
+  }
 
   function renderRelatedPosts(container, posts) {
     const wrapper = document.createElement("div");
@@ -160,5 +184,13 @@
 
     container.innerHTML = "";
     container.appendChild(wrapper);
+  }
+
+  // === Make sure init runs no matter when this script loads ===
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initRelatedPosts);
+  } else {
+    // DOM is already ready (our case when script is injected on window.load)
+    initRelatedPosts();
   }
 })();
