@@ -1,14 +1,10 @@
 (function () {
-  function init() {
+  document.addEventListener("DOMContentLoaded", function () {
     const container = document.getElementById("related-posts");
     if (!container) return;
 
     const feedUrl = container.getAttribute("data-feed-url");
-    const currentSlugAttr = (container.getAttribute("data-current-slug") || "").replace(/^\/|\/$/g, "");
-
-    // If no data-current-slug, fall back to URL
-    const currentSlug = currentSlugAttr || window.location.pathname.replace(/^\/blog\/|\/$/g, "");
-
+    const currentSlug = (container.getAttribute("data-current-slug") || "").replace(/^\/|\/$/g, "");
     const maxItems = parseInt(container.getAttribute("data-max-items") || "3", 10);
 
     if (!feedUrl) {
@@ -34,19 +30,7 @@
           const fullUrl = item.fullUrl || item.url || "";
           const url = fullUrl;
           const title = item.title || "Untitled";
-
-          // Normalize tags: Strings or objects with `.name`
-          let tags = item.tags || item.categories || [];
-          if (Array.isArray(tags)) {
-            tags = tags.map(function (t) {
-              if (typeof t === "string") return t;
-              if (t && typeof t === "object" && t.name) return t.name;
-              return "";
-            }).filter(Boolean);
-          } else {
-            tags = [];
-          }
-
+          const tags = item.tags || item.categories || [];
           const excerpt = item.excerpt || item.body || "";
           const assetUrl =
             item.assetUrl ||
@@ -68,7 +52,7 @@
             raw: item,
             url: url,
             title: title,
-            tags: tags,
+            tags: Array.isArray(tags) ? tags : [],
             excerpt: excerpt,
             assetUrl: assetUrl,
             slug: slugFromUrl
@@ -94,7 +78,9 @@
           );
         }
 
-        const currentTags = new Set((currentPost && currentPost.tags) || []);
+        const currentTags = new Set(
+          (currentPost && currentPost.tags) || []
+        );
 
         const scored = normalized
           .filter(function (p) {
@@ -136,13 +122,7 @@
       .catch(function (err) {
         console.error("[RelatedPosts] Error fetching or processing feed:", err);
       });
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init);
-  } else {
-    init();
-  }
+  });
 
   function renderRelatedPosts(container, posts) {
     const wrapper = document.createElement("div");
