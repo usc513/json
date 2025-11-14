@@ -1,11 +1,4 @@
 (function () {
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init);
-  } else {
-    init();
-  }
-
   function init() {
     const container = document.getElementById("related-posts");
     if (!container) return;
@@ -13,133 +6,148 @@
     const feedUrl = container.getAttribute("data-feed-url");
     const maxItems = parseInt(container.getAttribute("data-max-items") || "3", 10);
 
+    // Derive slug from URL
+    const currentSlug = window.location.pathname.replace(/^\/blog\/|\/$/g, "");
+
     if (!feedUrl) {
-      container.textContent = "Feed URL missing.";
+      console.warn("[RelatedPosts] Missing data-feed-url on #related-posts.");
       return;
     }
 
-    container.textContent = "Loading related posts...";
-
     fetch(feedUrl)
-      .then(r => r.json())
-      .then(data => {
-        let items = [];
-
-        if (Array.isArray(data.items)) items = data.items;
-        else if (data.collection && Array.isArray(data.collection.items))
-          items = data.collection.items;
-
+      .then((res) => {
+        if (!res.ok) throw new Error("Network response not ok");
+        return res.json();
+      })
+      .then((data) => {
+        const items = data.items || (data.collection && data.collection.items) || [];
         if (!items.length) {
+          console.warn("[RelatedPosts] No items found in feed.");
           container.textContent = "No related posts found.";
           return;
         }
 
         const posts = items.map(normalizePost);
 
-        const currentPath = window.location.pathname.replace(/\/+$/, "");
+        // Find current post
+        const currentPost = posts.find((p) => p.slug === currentSlug);
 
-        const filtered = posts.filter(p => {
-          if (!p.url) return false;
-          const postPath = p.url.replace(window.location.origin, "").replace(/\/+$/, "");
-          return postPath !== currentPath;
-        });
+        const currentTags = new Set((currentPost && currentPost.tags) || []);
 
-        filtered.sort((a, b) => b.publishOn - a.publishOn);
+        // Score by shared tags
+        const scored = posts
+          .filter((p) => p.slug !== currentSlug)
+          .map((p) => {
+            let score = 0;
+            p.tags.forEach((t) => {
+              if (currentTags.has(t)) score += 2;
+            });
+            return { post: p, score };
+          })
+          .sort((a, b) => b.score - a.score)
+          .slice(0, maxItems)
+          .map((x) => x.post);
 
-        const top = filtered.slice(0, maxItems);
-
-        if (!top.length) {
-          container.textContent = "No related posts found.";
-          return;
-        }
-
-        render(top, container);
+        renderCards(container, scored);
       })
-      .catch(err => {
-        console.error("[RelatedPosts] fetch error", err);
+      .catch((err) => {
+        console.error("[RelatedPosts] Error:", err);
         container.textContent = "Unable to load related posts.";
       });
   }
 
-  // CLEAN + FIXED NORMALIZER
+  // Normalize Squarespace post object
   function normalizePost(item) {
     const fullUrl = item.fullUrl || item.url || "";
+    const title = item.title || "Untitled";
+    const thumbnail = item.assetUrl || "";
+    let excerpt = item.excerpt || "";
 
-    let slug = "";
-    try {
-      const u = fullUrl.startsWith("http")
-        ? new URL(fullUrl)
-        : new URL(fullUrl, window.location.origin);
-      const seg = u.pathname.split("/").filter(Boolean);
-      slug = seg[seg.length - 1] || "";
-    } catch (e) {}
+    if (!excerpt && item.body) excerpt = stripHtml(item.body);
+    excerpt = excerpt.slice(0, 150) + "...";
 
-    // Tags
-    let tags = [];
-    if (Array.isArray(item.tags)) {
-      tags = item.tags
-        .map(t => (typeof t === "string" ? t : (t && t.name) || ""))
+    // Tags to strings
+    let tags = item.tags || [];
+    if (Array.isArray(tags)) {
+      tags = tags
+        .map((t) => (typeof t === "string" ? t : t.name || ""))
         .filter(Boolean);
     }
 
-    // Excerpt
-    let excerpt = "";
-    if (item.excerpt) excerpt = stripHtml(item.excerpt);
-    else if (item.body) excerpt = stripHtml(item.body);
-    if (excerpt.length > 200) excerpt = excerpt.slice(0, 197) + "...";
+    // Create slug
+    let slug = "";
+    try {
+      const u = new URL(fullUrl, window.location.origin);
+      const parts = u.pathname.split("/").filter(Boolean);
+      slug = parts[parts.length - 1] || "";
+    } catch (e) {}
 
-    // Thumbnail (this is what Squarespace provides)
-    const thumbnail = item.assetUrl || "";
-
-    return {
-      raw: item,
-      url: fullUrl,
-      slug: slug,
-      title: item.title || "Untitled",
-      excerpt: excerpt,
-      thumbnail: thumbnail,
-      tags: tags,
-      publishOn: Number(item.publishOn) || 0
-    };
+    return { url: fullUrl, title, excerpt, thumbnail, tags, slug };
   }
 
+  // Remove HTML tags
   function stripHtml(html) {
-    const d = document.createElement("div");
-    d.innerHTML = html || "";
-    return d.textContent || "";
+    var tmp = document.createElement("div");
+    tmp.innerHTML = html;
+    return tmp.textContent || tmp.innerText || "";
   }
 
-  function render(posts, container) {
-    const wrapper = document.createElement("div");
-    wrapper.className = "related-posts-wrapper";
+  // Render cards
+  function renderCards(container, posts) {
+    container.innerHTML = "";
 
-    posts.forEach(p => {
-      const card = document.createElement("div");
-      card.className = "related-post";
+    const wrapper = document.createElement("div");
+    wrapper.style.display = "grid";
+    wrapper.style.gridTemplateColumns = "repeat(auto-fit, minmax(250px, 1fr))";
+    wrapper.style.gap = "20px";
+
+    posts.forEach((post) => {
+      const card = document.createElement("a");
+      card.href = post.url;
+      card.style.display = "block";
+      card.style.border = "1px solid #ddd";
+      card.style.borderRadius = "8px";
+      card.style.overflow = "hidden";
+      card.style.textDecoration = "none";
+      card.style.color = "inherit";
+      card.style.background = "white";
 
       const img = document.createElement("img");
-      img.className = "related-post-thumb";
-      img.src = p.thumbnail;
-      img.alt = p.title;
+      img.src = post.thumbnail;
+      img.alt = post.title;
+      img.style.width = "100%";
+      img.style.height = "160px";
+      img.style.objectFit = "cover";
+
+      const body = document.createElement("div");
+      body.style.padding = "12px";
 
       const title = document.createElement("h4");
-      title.textContent = p.title;
+      title.textContent = post.title;
+      title.style.margin = "0 0 10px 0";
+      title.style.fontSize = "1.1rem";
 
       const excerpt = document.createElement("p");
-      excerpt.textContent = p.excerpt;
+      excerpt.textContent = post.excerpt;
+      excerpt.style.margin = "0";
+      excerpt.style.color = "#444";
+      excerpt.style.fontSize = "0.9rem";
 
-      const link = document.createElement("a");
-      link.href = p.url;
-      link.appendChild(img);
-      link.appendChild(title);
+      body.appendChild(title);
+      body.appendChild(excerpt);
 
-      card.appendChild(link);
-      card.appendChild(excerpt);
+      card.appendChild(img);
+      card.appendChild(body);
       wrapper.appendChild(card);
     });
 
-    container.innerHTML = "";
     container.appendChild(wrapper);
   }
 
+  // Initialize when DOM is ready
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
 })();
