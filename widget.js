@@ -1,6 +1,6 @@
 (function () {
 
-  // === RUN INIT WHETHER OR NOT DOMContentLoaded HAS FIRED ===
+  // Run init whether DOM is ready or already loaded
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);
   } else {
@@ -8,7 +8,7 @@
   }
 
   // ===========================================================
-  // MAIN INITIALIZATION
+  // INIT
   // ===========================================================
   function init() {
     console.log("[RelatedPosts] init");
@@ -21,11 +21,8 @@
 
     const feedUrl = container.getAttribute("data-feed-url");
     const currentSlug = (container.getAttribute("data-current-slug") || "")
-      .replace(/^\/|\/$/g, "");
-    const maxItems = parseInt(
-      container.getAttribute("data-max-items") || "3",
-      10
-    );
+      .replace(/^\/|\/$/g, ""); // remove leading/trailing slashes
+    const maxItems = parseInt(container.getAttribute("data-max-items") || "3", 10);
 
     if (!feedUrl) {
       container.textContent = "Missing feed URL.";
@@ -36,44 +33,46 @@
 
     fetch(feedUrl)
       .then(res => {
-        if (!res.ok) throw new Error("Bad network response");
+        if (!res.ok) throw new Error("Failed to load JSON feed");
         return res.json();
       })
       .then(data => {
         let items = [];
 
-        // Squarespace supports several shapes
+        // Squarespace JSON shapes
         if (Array.isArray(data.items)) items = data.items;
         else if (data.collection && Array.isArray(data.collection.items))
           items = data.collection.items;
 
-        console.log("[RelatedPosts] Feed items:", items.length);
-
         if (!items.length) {
+          console.warn("[RelatedPosts] Feed has no items");
           container.textContent = "No related posts found.";
           return;
         }
 
+        console.log("[RelatedPosts] Items found:", items.length);
+
         const posts = items.map(normalizePost);
 
-        // Identify the current post
+        // Find current post by slug
         let currentPost =
           posts.find(p => p.slug === currentSlug) ||
           posts.find(p => (p.url || "").includes("/" + currentSlug));
 
         const currentTags = new Set((currentPost && currentPost.tags) || []);
 
-        // Score posts by shared tags
+        // Score all other posts
         const scored = posts
           .filter(p => !currentPost || p.url !== currentPost.url)
           .map(p => {
             let score = 0;
 
+            // Shared tags score
             p.tags.forEach(tag => {
               if (currentTags.has(tag)) score += 2;
             });
 
-            return { post: p, score: score };
+            return { post: p, score };
           })
           .sort((a, b) => b.score - a.score);
 
@@ -93,7 +92,7 @@
   }
 
   // ===========================================================
-  // NORMALIZE A SQUARESPACE BLOG ITEM
+  // NORMALIZE POST FROM SQUARESPACE JSON
   // ===========================================================
   function normalizePost(item) {
     // URL
@@ -108,50 +107,44 @@
       const u = fullUrl.startsWith("http")
         ? new URL(fullUrl)
         : new URL(fullUrl, window.location.origin);
+
       const seg = u.pathname.split("/").filter(Boolean);
       slug = seg[seg.length - 1] || "";
     } catch (e) {}
 
-    // Tags (Squarespace uses array of strings OR array of objects)
+    // Tags (Squarespace uses arrays of strings)
     let tags = [];
     if (Array.isArray(item.tags)) {
-      tags = item.tags
-        .map(t => (typeof t === "string" ? t : t.name || ""))
-        .filter(Boolean);
-    } else if (Array.isArray(item.categories)) {
-      tags = item.categories.map(c => c.name || "").filter(Boolean);
+      tags = item.tags.map(t => typeof t === "string" ? t : t.name || "");
     }
 
-    // Excerpt (strip HTML)
+    // Excerpt text (strip HTML)
     let excerpt = "";
     if (item.excerpt) excerpt = stripHtml(item.excerpt);
     else if (item.body) excerpt = stripHtml(item.body);
-
     if (excerpt.length > 200) excerpt = excerpt.slice(0, 197) + "...";
 
-    // Thumbnail (Squarespace uses assetUrl)
-    let thumbnail = "";
-    if (item.assetUrl) thumbnail = item.assetUrl;
-    else if (item.media && item.media[0] && item.media[0].url)
-      thumbnail = item.media[0].url;
+    // THUMBNAIL (your site uses assetUrl!)
+    const thumbnail = item.assetUrl || "";
 
     return {
       raw: item,
       url: fullUrl,
-      title: title,
-      slug: slug,
-      tags: tags,
-      excerpt: excerpt,
-      thumbnail: thumbnail
+      title,
+      slug,
+      tags,
+      excerpt,
+      thumbnail
     };
   }
 
+  // Strip HTML to clean excerpt text
   function stripHtml(html) {
     return html ? html.replace(/<[^>]*>/g, "").trim() : "";
   }
 
   // ===========================================================
-  // RENDER RELATED POSTS
+  // RENDER
   // ===========================================================
   function renderRelatedPosts(container, posts) {
     const wrapper = document.createElement("div");
@@ -169,10 +162,12 @@
       card.href = post.url;
       card.className = "related-post-card";
 
+      // THUMBNAIL
       if (post.thumbnail) {
         const img = document.createElement("img");
         img.src = post.thumbnail;
         img.className = "related-post-thumb";
+        img.alt = post.title;
         card.appendChild(img);
       }
 
@@ -192,6 +187,8 @@
     });
 
     wrapper.appendChild(grid);
+
+    // Inject into DOM
     container.innerHTML = "";
     container.appendChild(wrapper);
   }
