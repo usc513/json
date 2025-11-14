@@ -1,5 +1,4 @@
 (function () {
-
   // Run init whether DOM is ready or already loaded
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);
@@ -7,9 +6,6 @@
     init();
   }
 
-  // ===========================================================
-  // INIT
-  // ===========================================================
   function init() {
     console.log("[RelatedPosts] init");
 
@@ -20,133 +16,164 @@
     }
 
     const feedUrl = container.getAttribute("data-feed-url");
-    const currentSlug = (container.getAttribute("data-current-slug") || "")
-      .replace(/^\/|\/$/g, ""); // remove leading/trailing slashes
+    let currentSlug = (container.getAttribute("data-current-slug") || "")
+      .replace(/^\/|\/$/g, ""); // trim slashes
+
+    // Fallback: derive slug from current URL if not provided
+    if (!currentSlug) {
+      const parts = window.location.pathname.split("/").filter(Boolean);
+      currentSlug = parts[parts.length - 1] || "";
+      console.log("[RelatedPosts] Derived slug from URL:", currentSlug);
+    } else {
+      console.log("[RelatedPosts] Using slug from data-current-slug:", currentSlug);
+    }
+
     const maxItems = parseInt(container.getAttribute("data-max-items") || "3", 10);
 
     if (!feedUrl) {
+      console.warn("[RelatedPosts] Missing data-feed-url on #related-posts.");
       container.textContent = "Missing feed URL.";
       return;
     }
 
-    console.log("[RelatedPosts] Fetching:", feedUrl);
+    console.log("[RelatedPosts] Fetching feed:", feedUrl);
 
     fetch(feedUrl)
-      .then(res => {
-        if (!res.ok) throw new Error("Failed to load JSON feed");
+      .then(function (res) {
+        if (!res.ok) throw new Error("Failed to load JSON feed: " + res.status);
         return res.json();
       })
-      .then(data => {
+      .then(function (data) {
+        console.log("[RelatedPosts] Raw data keys:", Object.keys(data));
+
         let items = [];
 
-        // Squarespace JSON shapes
-        if (Array.isArray(data.items)) items = data.items;
-        else if (data.collection && Array.isArray(data.collection.items))
+        if (Array.isArray(data.items)) {
+          items = data.items;
+        } else if (data.collection && Array.isArray(data.collection.items)) {
           items = data.collection.items;
+        }
+
+        console.log("[RelatedPosts] items.length =", items.length);
 
         if (!items.length) {
-          console.warn("[RelatedPosts] Feed has no items");
+          console.warn("[RelatedPosts] No items found in feed.");
           container.textContent = "No related posts found.";
           return;
         }
 
-        console.log("[RelatedPosts] Items found:", items.length);
-
         const posts = items.map(normalizePost);
 
-        // Find current post by slug
+        console.log("[RelatedPosts] Example normalized post:", posts[0]);
+
+        // Find the current post in the feed
         let currentPost =
-          posts.find(p => p.slug === currentSlug) ||
-          posts.find(p => (p.url || "").includes("/" + currentSlug));
+          posts.find(function (p) {
+            return p.slug === currentSlug;
+          }) ||
+          posts.find(function (p) {
+            return (p.url || "").indexOf("/" + currentSlug) !== -1;
+          });
+
+        if (!currentPost) {
+          console.warn("[RelatedPosts] Could not find current post by slug:", currentSlug);
+        } else {
+          console.log("[RelatedPosts] Found current post:", currentPost.title, currentPost.url);
+        }
 
         const currentTags = new Set((currentPost && currentPost.tags) || []);
+        console.log("[RelatedPosts] Current tags:", Array.from(currentTags));
 
-        // Score all other posts
         const scored = posts
-          .filter(p => !currentPost || p.url !== currentPost.url)
-          .map(p => {
+          .filter(function (p) {
+            if (currentPost && p.url === currentPost.url) return false;
+            return true;
+          })
+          .map(function (p) {
             let score = 0;
 
-            // Shared tags score
-            p.tags.forEach(tag => {
-              if (currentTags.has(tag)) score += 2;
-            });
+            // tag overlap
+            if (currentTags.size > 0) {
+              p.tags.forEach(function (tag) {
+                if (currentTags.has(tag)) score += 2;
+              });
+            }
 
-            return { post: p, score };
+            return { post: p, score: score };
           })
-          .sort((a, b) => b.score - a.score);
+          .sort(function (a, b) {
+            return b.score - a.score;
+          });
 
-        const top = scored.slice(0, maxItems).map(s => s.post);
+        console.log("[RelatedPosts] Top scores:", scored.slice(0, 5));
+
+        const top = scored.slice(0, maxItems).map(function (s) {
+          return s.post;
+        });
 
         if (!top.length) {
+          console.info("[RelatedPosts] No related posts to display.");
           container.textContent = "No related posts found.";
           return;
         }
 
         renderRelatedPosts(container, top);
       })
-      .catch(err => {
-        console.error("[RelatedPosts] Error:", err);
+      .catch(function (err) {
+        console.error("[RelatedPosts] Error fetching or processing feed:", err);
         container.textContent = "Unable to load related posts.";
       });
   }
 
-  // ===========================================================
-  // NORMALIZE POST FROM SQUARESPACE JSON
-  // ===========================================================
+  // Normalize one Squarespace item
   function normalizePost(item) {
-    // URL
     const fullUrl = item.fullUrl || item.url || "";
 
-    // Title
-    const title = item.title || "Untitled";
-
-    // Slug
     let slug = "";
     try {
       const u = fullUrl.startsWith("http")
         ? new URL(fullUrl)
         : new URL(fullUrl, window.location.origin);
 
-      const seg = u.pathname.split("/").filter(Boolean);
-      slug = seg[seg.length - 1] || "";
+      const segments = u.pathname.split("/").filter(Boolean);
+      slug = segments[segments.length - 1] || "";
     } catch (e) {}
 
-    // Tags (Squarespace uses arrays of strings)
+    // Tags as strings
     let tags = [];
     if (Array.isArray(item.tags)) {
-      tags = item.tags.map(t => typeof t === "string" ? t : t.name || "");
+      tags = item.tags.map(function (t) {
+        return typeof t === "string" ? t : (t && t.name) || "";
+      }).filter(Boolean);
     }
 
-    // Excerpt text (strip HTML)
+    // Excerpt from excerpt/body
     let excerpt = "";
     if (item.excerpt) excerpt = stripHtml(item.excerpt);
     else if (item.body) excerpt = stripHtml(item.body);
     if (excerpt.length > 200) excerpt = excerpt.slice(0, 197) + "...";
 
-    // THUMBNAIL (your site uses assetUrl!)
+    // Thumbnail from assetUrl (this exists in your JSON)
     const thumbnail = item.assetUrl || "";
 
     return {
       raw: item,
       url: fullUrl,
-      title,
-      slug,
-      tags,
-      excerpt,
-      thumbnail
+      slug: slug,
+      title: item.title || "Untitled",
+      tags: tags,
+      excerpt: excerpt,
+      thumbnail: thumbnail
     };
   }
 
-  // Strip HTML to clean excerpt text
   function stripHtml(html) {
     return html ? html.replace(/<[^>]*>/g, "").trim() : "";
   }
 
-  // ===========================================================
-  // RENDER
-  // ===========================================================
   function renderRelatedPosts(container, posts) {
+    console.log("[RelatedPosts] Rendering", posts.length, "posts");
+
     const wrapper = document.createElement("div");
     wrapper.className = "related-posts-widget";
 
@@ -157,17 +184,16 @@
     const grid = document.createElement("div");
     grid.className = "related-posts-grid";
 
-    posts.forEach(post => {
+    posts.forEach(function (post) {
       const card = document.createElement("a");
       card.href = post.url;
       card.className = "related-post-card";
 
-      // THUMBNAIL
       if (post.thumbnail) {
         const img = document.createElement("img");
         img.src = post.thumbnail;
-        img.className = "related-post-thumb";
         img.alt = post.title;
+        img.className = "related-post-thumb";
         card.appendChild(img);
       }
 
@@ -188,7 +214,6 @@
 
     wrapper.appendChild(grid);
 
-    // Inject into DOM
     container.innerHTML = "";
     container.appendChild(wrapper);
   }
