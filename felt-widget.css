@@ -1,0 +1,334 @@
+/* ================================
+   Shared base styles
+   ================================ */
+
+.felt-widget,
+.related-posts-widget,
+.felt-chat-wrapper {
+  box-sizing: border-box;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #f5f5f7;
+}
+
+/* Make sure all nested elements respect box-sizing */
+.felt-widget *,
+.related-posts-widget *,
+.felt-chat-wrapper * {
+  box-sizing: inherit;
+}
+
+/* ================================
+   FELT-NEEDS WIDGET
+   Expected structure (example):
+   <div class="felt-widget">
+     <h3 class="felt-heading">Find help for...</h3>
+     <div class="felt-topic-grid">
+       <article class="felt-topic-card">
+         <a class="felt-topic-link" href="...">
+           <div class="felt-topic-thumb-wrap">
+             <img class="felt-topic-thumb" src="..." alt="">
+           </div>
+           <div class="felt-topic-body">
+             <h4 class="felt-topic-title">Loss & Grief</h4>
+             <p class="felt-topic-meta">3 articles · Tags: Loss, Grief, Pain</p>
+           </div>
+         </a>
+       </article>
+     </div>
+   </div>
+   ================================ */
+
+.felt-widget {
+  margin-top: 2.5rem;
+  padding: 20px;
+  background: radial-gradient(circle at top left, #25273a 0, #111217 45%, #05060a 100%);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  box-shadow:
+    0 18px 45px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
+.felt-heading {
+  margin: 0 0 0.75rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.felt-subheading {
+  margin: 0 0 1.25rem;
+  font-size: 0.9rem;
+  color: #c3c4ce;
+}
+
+/* Topic grid */
+
+.felt-topic-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 1.25rem;
+}
+
+/* Individual topic card */
+
+.felt-topic-card {
+  background: rgba(9, 10, 17, 0.95);
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.7);
+  transition:
+    transform 0.18s ease-out,
+    box-shadow 0.18s ease-out,
+    border-color 0.18s ease-out,
+    background 0.18s ease-out;
+}
+
+.felt-topic-card:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.75),
+    0 0 0 1px rgba(255, 255, 255, 0.06);
+  border-color: rgba(90, 207, 255, 0.6);
+  background: radial-gradient(circle at top, #1b2338 0, #090a11 55%);
+}
+
+/* Clickable area */
+
+.felt-topic-link {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Thumbnail */
+
+.felt-topic-thumb-wrap {
+  position: relative;
+  width: 100%;
+  padding-top: 56.25%; /* 16:9 ratio */
+  overflow: hidden;
+  background: #050609;
+}
+
+.felt-topic-thumb {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.22s ease-out;
+}
+
+.felt-topic-card:hover .felt-topic-thumb {
+  transform: scale(1.04);
+}
+
+/* Card body */
+
+.felt-topic-body {
+  padding: 0.85rem 0.85rem 0.95rem;
+}
+
+.felt-topic-title {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.felt-topic-meta {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: #a4a5b0;
+}
+
+/* Optional tag chips row inside topic cards */
+
+.felt-topic-tags {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.felt-topic-tag {
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.7rem;
+  color: #d2d3dd;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* ================================
+   RELATED POSTS WIDGET
+   Expected structure (current js):
+   <div class="related-posts-widget">
+     <h3>Related Posts</h3>
+     <ul class="related-posts-list">
+       <li class="related-post-item">
+         <a class="related-post-link" href="...">Title</a>
+         <div class="related-post-tags">Loss, Grief, Pain</div>
+       </li>
+     </ul>
+   </div>
+   (If you later add thumbnails, you can use .related-post-thumb-wrap + img)
+   ================================ */
+
+.related-posts-widget {
+  margin-top: 2.5rem;
+  padding: 18px 18px 20px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #181924 0, #090a11 50%, #050509 100%);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.75),
+    0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
+.related-posts-widget > h3 {
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* List layout = cards */
+
+.related-posts-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.9rem;
+}
+
+.related-post-item {
+  background: rgba(6, 7, 13, 0.96);
+  border-radius: 12px;
+  padding: 10px 11px 11px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.7);
+  transition:
+    transform 0.18s ease-out,
+    box-shadow 0.18s ease-out,
+    border-color 0.18s ease-out,
+    background 0.18s ease-out;
+}
+
+.related-post-item:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 14px 32px rgba(0, 0, 0, 0.75),
+    0 0 0 1px rgba(255, 255, 255, 0.06);
+  border-color: rgba(90, 207, 255, 0.6);
+  background: radial-gradient(circle at top, #1a2235 0, #06070d 60%);
+}
+
+.related-post-link {
+  display: block;
+  text-decoration: none;
+  color: #f5f5f7;
+  font-size: 0.92rem;
+  font-weight: 500;
+  line-height: 1.35;
+  margin-bottom: 0.25rem;
+}
+
+.related-post-link:hover {
+  text-decoration: underline;
+}
+
+.related-post-tags {
+  font-size: 0.72rem;
+  color: #a5a6b4;
+}
+
+/* If you later output thumbnails, you can use this structure:
+   <div class="related-post-thumb-wrap"><img class="related-post-thumb" ...></div>
+*/
+
+.related-post-thumb-wrap {
+  position: relative;
+  width: 100%;
+  padding-top: 56.25%;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #05060a;
+  margin-bottom: 0.5rem;
+}
+
+.related-post-thumb {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.22s ease-out;
+}
+
+.related-post-item:hover .related-post-thumb {
+  transform: scale(1.04);
+}
+
+/* ================================
+   CUSTOMGPT / CHAT WRAPPER
+   ================================ */
+
+.felt-chat-wrapper {
+  margin-top: 2rem;
+  padding: 18px;
+  border-radius: 16px;
+  background: radial-gradient(circle at top left, #23273a 0, #111217 50%, #05050a 100%);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.75),
+    0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
+.felt-chat-wrapper h3 {
+  margin: 0 0 0.4rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.felt-chat-wrapper p {
+  margin: 0 0 0.8rem;
+  font-size: 0.9rem;
+  color: #c2c3cf;
+}
+
+/* Space around the embedded widget */
+#customgpt_chat {
+  margin-top: 0.4rem;
+}
+
+/* ================================
+   Responsiveness
+   ================================ */
+
+@media (max-width: 640px) {
+  .felt-widget,
+  .related-posts-widget,
+  .felt-chat-wrapper {
+    padding: 14px;
+    border-radius: 12px;
+  }
+
+  .felt-heading {
+    font-size: 1.05rem;
+  }
+
+  .felt-topic-grid,
+  .related-posts-list {
+    grid-template-columns: 1fr;
+  }
+}
