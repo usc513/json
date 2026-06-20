@@ -22,6 +22,7 @@ Nothing is sent anywhere unless *you* tap Export.
 | Next-dose countdown, flex window, and "stop eating by…" fasting cue | **Today** |
 | One-tap **Log dose** (time auto-fills to now) | **Today** |
 | **Side effect** logger — pick a type, set a 1–10 intensity, auto time/date | **Today** |
+| **Food log** — what + how much, and a warning if you eat inside the no-food window | **Today** |
 | **Note an observation** — free text + optional body temperature (°F/°C) | **Today** |
 | **Stand-up detector** — prompts "feeling lightheaded?" when you rise (see caveat) | **Today** |
 | Full grouped history, filterable by doses / side effects / notes | **History** |
@@ -60,6 +61,9 @@ mode, and motion permission to work. The easiest free host is **GitHub Pages**.
   flex window, and when to stop eating beforehand.
 - **Felt a side effect?** Tap **Log a side effect**, choose the type (or type a
   new one), drag the 1–10 slider, save. Time/date auto-fill.
+- **Ate something?** Tap **Add food**, jot what you ate and a portion. If you're
+  inside the 2-hour no-food window before your next dose, the app warns you — and
+  the Today card flags it so you can tell your team if timing slipped.
 - **An observation to track?** Tap **Add a note** — e.g. tag *Chills* + enter a
   temperature your doctor asked you to watch.
 - **Sharing with your trial team?** **Stats → Export CSV** opens a clean
@@ -89,6 +93,7 @@ up a couple of free, native automations:
 > - `…/tracker/?quick=dose` — opens the **Log dose** sheet
 > - `…/tracker/?quick=dose&confirm=1` — logs a dose **instantly**, no taps
 > - `…/tracker/?quick=se` — opens the **side-effect** logger
+> - `…/tracker/?quick=meal` — opens the **food** logger
 > - `…/tracker/?quick=note` — opens the **note** logger
 
 ### B. Fasting heads-up (no food 2 hours before)
@@ -128,7 +133,8 @@ phone is in your pocket is **not** possible without a true native app.
 For most people, **option 3 + the in-app detector** captures the data your study
 team needs without a custom native app. If you do want the Apple Watch route —
 including true background stand-up detection — see **[WATCH_APP_SPEC.md](WATCH_APP_SPEC.md)**
-for a build-ready spec a developer can take into Xcode.
+for the design, and **[`watch-app/`](watch-app/)** for a Phase 1 Swift starter
+(wrist logging, dose reminders, complication) ready to drop into Xcode.
 
 ---
 

@@ -263,9 +263,16 @@
       // fasting cue
       var fastStart = new Date(target.getTime() - settings.fastHours * 3600000);
       if (settings.fastHours > 0) {
+        var ateInWindow = mealsBetween(fastStart, target);
         if (now >= fastStart) {
-          $("#fasting-note").textContent =
-            "🍽️ Fasting window — no food until after this dose.";
+          if (ateInWindow.length) {
+            $("#fasting-note").textContent =
+              "⚠️ You ate at " + fmtTime(new Date(ateInWindow[0].ts)) +
+              ", inside the no-food window. Check dose timing with your team.";
+          } else {
+            $("#fasting-note").textContent =
+              "🍽️ Fasting window — no food until after this dose.";
+          }
         } else {
           $("#fasting-note").textContent =
             "Stop eating by " + fmtTime(fastStart) + " (" + settings.fastHours + "h before).";
@@ -355,7 +362,7 @@
     var list = $("#today-se-list");
     var today = new Date();
     var items = events.filter(function (e) {
-      return (e.type === "sideEffect" || e.type === "note") && isSameDay(new Date(e.ts), today);
+      return e.type !== "dose" && isSameDay(new Date(e.ts), today);
     }).sort(function (a, b) { return new Date(b.ts) - new Date(a.ts); });
     if (!items.length) { card.hidden = true; return; }
     card.hidden = false;
@@ -370,6 +377,9 @@
     if (e.type === "sideEffect") {
       main.appendChild(el("div", "ev-title", e.kind + " · " + e.intensity + "/10"));
       if (e.note) main.appendChild(el("div", "ev-sub", e.note));
+    } else if (e.type === "meal") {
+      main.appendChild(el("div", "ev-title", e.food || "Food"));
+      if (e.amount) main.appendChild(el("div", "ev-sub", e.amount));
     } else {
       main.appendChild(el("div", "ev-title", noteSummary(e) || "Note"));
       if (e.text) main.appendChild(el("div", "ev-sub", e.text));
@@ -568,6 +578,91 @@
   }
 
   // ------------------------------------------------------------------
+  // Food / meal sheet
+  // ------------------------------------------------------------------
+  var MEAL_PORTIONS = ["Bite", "Snack", "Small", "Medium", "Large"];
+  var mealPortion = "";
+
+  function mealsBetween(start, end) {
+    return events.filter(function (e) {
+      if (e.type !== "meal") return false;
+      var t = new Date(e.ts);
+      return t >= start && t <= end;
+    }).sort(function (a, b) { return new Date(b.ts) - new Date(a.ts); });
+  }
+
+  function buildMealChips() {
+    var wrap = $("#meal-portion-chips");
+    wrap.innerHTML = "";
+    MEAL_PORTIONS.forEach(function (p) {
+      var c = el("button", "chip", p);
+      c.type = "button";
+      c.addEventListener("click", function () {
+        mealPortion = p;
+        $("#meal-amount-other").value = "";
+        $all(".chip", wrap).forEach(function (x) { x.classList.remove("selected"); });
+        c.classList.add("selected");
+      });
+      wrap.appendChild(c);
+    });
+  }
+
+  function openMealSheet() {
+    mealPortion = "";
+    $("#meal-when").value = toLocalInput(new Date());
+    $("#meal-food").value = "";
+    $("#meal-amount-other").value = "";
+    buildMealChips();
+    // warn if we're currently inside the no-food window before the next dose
+    var warn = $("#meal-fast-warn");
+    warn.textContent = "";
+    if (settings.fastHours > 0) {
+      var info = nextDoseInfo();
+      if (info && info.time > new Date()) {
+        var fastStart = new Date(info.time.getTime() - settings.fastHours * 3600000);
+        if (new Date() >= fastStart) {
+          warn.textContent = "⚠️ No-food window — your next dose is at " +
+            fmtTime(info.time) + ". Eating now may affect dose timing.";
+        }
+      }
+    }
+    openSheet("meal-sheet");
+  }
+
+  $("#meal-amount-other").addEventListener("input", function () {
+    if (this.value.trim()) {
+      mealPortion = "";
+      $all(".chip", $("#meal-portion-chips")).forEach(function (x) { x.classList.remove("selected"); });
+    }
+  });
+
+  $("#quick-meal-btn").addEventListener("click", openMealSheet);
+
+  $("#save-meal").addEventListener("click", function () {
+    var food = $("#meal-food").value.trim();
+    var amount = $("#meal-amount-other").value.trim() || mealPortion;
+    if (!food && !amount) { toast("Add what or how much you ate", true); return; }
+    var ts = fromLocalInput($("#meal-when").value);
+    if (isNaN(ts)) { toast("Pick a valid time", true); return; }
+    events.push({
+      id: uid(), type: "meal", ts: ts.toISOString(),
+      food: food || "Food", amount: amount
+    });
+    persistEvents();
+    closeSheet("meal-sheet");
+    // confirm, and flag if it landed inside a fasting window
+    var info = nextDoseInfo();
+    if (settings.fastHours > 0 && info &&
+        ts >= new Date(info.time.getTime() - settings.fastHours * 3600000) &&
+        ts <= info.time) {
+      toast("Logged — but inside the no-food window", true);
+    } else {
+      toast("Food logged ✓");
+    }
+    renderToday();
+  });
+
+  // ------------------------------------------------------------------
   // Delete
   // ------------------------------------------------------------------
   function deleteEvent(id) {
@@ -629,6 +724,11 @@
       if (e.note) main.appendChild(el("div", "ev-sub", e.note));
       li.appendChild(main);
       li.appendChild(el("span", "ev-badge badge-se", "EFFECT"));
+    } else if (e.type === "meal") {
+      main.appendChild(el("div", "ev-title", e.food || "Food"));
+      if (e.amount) main.appendChild(el("div", "ev-sub", e.amount));
+      li.appendChild(main);
+      li.appendChild(el("span", "ev-badge badge-meal", "FOOD"));
     } else {
       main.appendChild(el("div", "ev-title", noteSummary(e) || "Note"));
       if (e.text) main.appendChild(el("div", "ev-sub", e.text));
@@ -713,11 +813,16 @@
     events.slice().sort(function (a, b) { return new Date(a.ts) - new Date(b.ts); })
       .forEach(function (e) {
         var d = new Date(e.ts);
-        var type = e.type === "dose" ? "Dose" : (e.type === "sideEffect" ? "Side effect" : "Note");
-        var detail = e.type === "dose" ? "Medication"
-          : (e.type === "sideEffect" ? e.kind : (e.tags && e.tags.length ? e.tags.join("; ") : "Observation"));
+        var typeMap = { dose: "Dose", sideEffect: "Side effect", note: "Note", meal: "Meal" };
+        var type = typeMap[e.type] || e.type;
+        var detail;
+        if (e.type === "dose") detail = "Medication";
+        else if (e.type === "sideEffect") detail = e.kind;
+        else if (e.type === "meal") detail = e.food || "Food";
+        else detail = (e.tags && e.tags.length) ? e.tags.join("; ") : "Observation";
         var temp = (e.type === "note" && e.temp != null) ? (e.temp + "°" + (e.tempUnit || "F")) : "";
-        var note = e.type === "note" ? (e.text || "") : (e.note || "");
+        var note = e.type === "note" ? (e.text || "")
+          : (e.type === "meal" ? (e.amount || "") : (e.note || ""));
         rows.push([
           d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()),
           pad(d.getHours()) + ":" + pad(d.getMinutes()),
@@ -915,6 +1020,8 @@
       openSeSheet();
     } else if (q === "note") {
       openNoteSheet();
+    } else if (q === "meal") {
+      openMealSheet();
     }
     if (q && history.replaceState) {
       history.replaceState(null, "", location.pathname);

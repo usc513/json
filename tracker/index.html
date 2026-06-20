@@ -57,6 +57,13 @@
           <button class="btn btn-warn btn-big" id="quick-se-btn">Log a side effect</button>
         </div>
 
+        <!-- Quick food / meal -->
+        <div class="card">
+          <h2 class="card-title">Log food</h2>
+          <p class="muted small">Track what &amp; how much you ate &mdash; helps you respect the no-food window before each dose.</p>
+          <button class="btn btn-big" id="quick-meal-btn">Add food</button>
+        </div>
+
         <!-- Quick note / observation -->
         <div class="card">
           <h2 class="card-title">Note an observation</h2>
@@ -95,6 +102,7 @@
               <option value="all">All events</option>
               <option value="dose">Doses only</option>
               <option value="sideEffect">Side effects only</option>
+              <option value="meal">Food only</option>
               <option value="note">Notes only</option>
             </select>
           </div>
@@ -233,6 +241,30 @@
       <div class="sheet-actions">
         <button class="btn btn-ghost" data-close-sheet="se-sheet">Cancel</button>
         <button class="btn btn-warn" id="save-se">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== MEAL SHEET ===================== -->
+  <div class="sheet-backdrop" id="meal-sheet" hidden>
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <h2 class="sheet-title">Log food</h2>
+      <div class="fasting-note" id="meal-fast-warn"></div>
+      <label class="field">
+        <span>When did you eat?</span>
+        <input type="datetime-local" id="meal-when" />
+      </label>
+      <label class="field">
+        <span>What did you eat?</span>
+        <input type="text" id="meal-food" placeholder="e.g. Oatmeal and coffee" />
+      </label>
+      <span class="field-label">How much?</span>
+      <div class="chip-grid" id="meal-portion-chips"></div>
+      <input type="text" id="meal-amount-other" class="text-input" placeholder="Or describe (e.g. 1 cup, half a sandwich)…" />
+      <div class="sheet-actions">
+        <button class="btn btn-ghost" data-close-sheet="meal-sheet">Cancel</button>
+        <button class="btn btn-primary" id="save-meal">Save food</button>
       </div>
     </div>
   </div>

@@ -121,6 +121,7 @@ html, body {
 .badge-dose { background: rgba(59,130,246,.18); color: #9cc2ff; }
 .badge-se { background: rgba(245,158,11,.16); color: #ffd98a; }
 .badge-note { background: rgba(34,197,94,.16); color: #9be8b6; }
+.badge-meal { background: rgba(168,130,255,.18); color: #cdb8ff; }
 
 .temp-row { display: flex; gap: 8px; }
 .temp-row input { flex: 1; }
