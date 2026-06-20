@@ -126,7 +126,9 @@ phone is in your pocket is **not** possible without a true native app.
    coverage: a couple of taps a day to log any lightheadedness, no sensors needed.
 
 For most people, **option 3 + the in-app detector** captures the data your study
-team needs without a custom native app.
+team needs without a custom native app. If you do want the Apple Watch route —
+including true background stand-up detection — see **[WATCH_APP_SPEC.md](WATCH_APP_SPEC.md)**
+for a build-ready spec a developer can take into Xcode.
 
 ---
 
