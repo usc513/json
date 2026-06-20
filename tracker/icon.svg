@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#0b1220"/>
+  <rect x="56" y="56" width="400" height="400" rx="92" fill="#16233b"/>
+  <!-- pill / capsule -->
+  <g transform="rotate(45 256 256)">
+    <rect x="156" y="206" width="200" height="100" rx="50" fill="#3b82f6"/>
+    <path d="M256 206 h50 a50 50 0 0 1 50 50 v0 a50 50 0 0 1 -50 50 h-50 z" fill="#9cc2ff"/>
+    <line x1="256" y1="206" x2="256" y2="306" stroke="#0b1220" stroke-width="8"/>
+  </g>
+  <!-- check -->
+  <circle cx="356" cy="356" r="64" fill="#22c55e" stroke="#0b1220" stroke-width="10"/>
+  <path d="M330 356 l18 18 l34 -36" fill="none" stroke="#04220f" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
