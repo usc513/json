@@ -111,8 +111,16 @@
   /* ---- Reveal ---- */
   .revealTop{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
   .revealTop .step{font-size:13px;color:var(--gold-dim);letter-spacing:.5px}
-  .speedRow{display:flex;align-items:center;gap:12px;margin:6px 4px 14px;font-size:14px;color:var(--gold-dim)}
+  .speedRow{display:flex;align-items:center;gap:12px;margin:6px 4px 8px;font-size:14px;color:var(--gold-dim)}
   .speedRow input[type=range]{flex:1;accent-color:var(--gold)}
+  .voiceRow{display:flex;align-items:center;gap:10px;margin:0 4px 12px;font-size:16px}
+  .voiceRow select{
+    flex:1;min-width:0;font-size:15px;padding:12px 12px;border-radius:14px;
+    border:2px solid rgba(231,198,107,.35);background:rgba(255,255,255,.06);
+    color:var(--cream);outline:none;-webkit-appearance:none;appearance:none;
+  }
+  .voiceRow select:focus{border-color:var(--gold)}
+  .voiceRow option{color:#000}
   .toggle{display:flex;align-items:center;gap:8px;font-size:15px;color:var(--cream)}
   .stage{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:10px}
   .bigWord{
@@ -176,8 +184,12 @@
     </div>
 
     <div class="speedRow">
-      🐢 <input type="range" id="speed" min="0.4" max="1" step="0.05" value="0.62" /> 🐇
+      🐢 <input type="range" id="speed" min="0.4" max="1" step="0.05" value="0.7" /> 🐇
       <label class="toggle" style="flex:none"><input type="checkbox" id="voiceOn" checked /> 🔊</label>
+    </div>
+    <div class="voiceRow">
+      <span aria-hidden="true">🎙️</span>
+      <select id="voiceSelect" aria-label="Choose voice"></select>
     </div>
 
     <div class="stage">
@@ -213,12 +225,84 @@
   var bigWord = $("bigWord"), roundBadge = $("roundBadge"), progress = $("progress");
   var roundLabel = $("roundLabel"), readBtn = $("readBtn"), stopBtn = $("stopBtn");
   var backBtn = $("backBtn"), speed = $("speed"), voiceOn = $("voiceOn"), voiceNote = $("voiceNote");
-  var resetBtn = $("resetBtn");
+  var resetBtn = $("resetBtn"), voiceSelect = $("voiceSelect");
 
   var speechOK = ("speechSynthesis" in window);
   if(!speechOK){
     voiceOn.checked = false; voiceOn.disabled = true;
     voiceNote.textContent = "Voice not supported here — words still shown on screen.";
+    if(voiceSelect) voiceSelect.style.display = "none";
+  } else {
+    voiceNote.textContent = "Sounds robotic? Try a different voice above — or install a natural one in your phone's settings (see the guide).";
+  }
+
+  // ---------- voice selection (pick the best installed voice) ----------
+  var voices = [], chosenVoice = null, VOICE_STORE = "empire_voice_v1";
+
+  // Higher score = more natural / clearer. Rewards en-US, on-device, and voices
+  // whose names signal quality; penalizes the tinny "compact"/novelty voices.
+  function scoreVoice(v){
+    var n = (v.name || "").toLowerCase();
+    var s = 0;
+    if(v.localService) s += 2;
+    if(/en[-_]us/i.test(v.lang)) s += 3;
+    else if(/^en/i.test(v.lang)) s += 1;
+    ["natural","neural","enhanced","premium","siri","google","samantha","ava",
+     "allison","serena","zoe","aaron","evan","nathan","joelle","tom","daniel"]
+      .forEach(function(k){ if(n.indexOf(k) > -1) s += 4; });
+    ["compact","eloquence","fred","albert","zarvox","organ","cellos","bells",
+     "boing","trinoids","whisper","wobble","superstar","junior","ralph","bahh",
+     "deranged","hysterical","novelty","bad news","good news"]
+      .forEach(function(k){ if(n.indexOf(k) > -1) s -= 6; });
+    return s;
+  }
+
+  function regionTag(lang){
+    if(/en[-_]?gb/i.test(lang)) return " · UK";
+    if(/en[-_]?au/i.test(lang)) return " · AU";
+    if(/en[-_]?in/i.test(lang)) return " · IN";
+    if(/en[-_]?us/i.test(lang)) return " · US";
+    return "";
+  }
+
+  function loadVoices(){
+    if(!speechOK || !voiceSelect) return;
+    var all = speechSynthesis.getVoices() || [];
+    if(!all.length) return; // not ready yet; onvoiceschanged will call again
+    voices = all.filter(function(v){ return /^en/i.test(v.lang); });
+    if(!voices.length) voices = all.slice();
+    voices.sort(function(a, b){ return scoreVoice(b) - scoreVoice(a); });
+
+    var saved = null; try{ saved = localStorage.getItem(VOICE_STORE); }catch(e){}
+    voiceSelect.innerHTML = "";
+    voices.forEach(function(v){
+      var o = document.createElement("option");
+      o.value = v.voiceURI;
+      o.textContent = v.name + regionTag(v.lang);
+      voiceSelect.appendChild(o);
+    });
+    var pick = null;
+    if(saved){ pick = voices.filter(function(v){ return v.voiceURI === saved; })[0]; }
+    if(!pick) pick = voices[0];
+    chosenVoice = pick || null;
+    if(chosenVoice) voiceSelect.value = chosenVoice.voiceURI;
+  }
+
+  function previewVoice(){
+    if(!speechOK) return;
+    try{ speechSynthesis.cancel(); }catch(e){}
+    var u = new SpeechSynthesisUtterance("Empire");
+    if(chosenVoice){ u.voice = chosenVoice; u.lang = chosenVoice.lang; }
+    u.rate = parseFloat(speed.value) || 0.7; u.pitch = 1;
+    try{ speechSynthesis.speak(u); }catch(e){}
+  }
+
+  if(voiceSelect){
+    voiceSelect.onchange = function(){
+      chosenVoice = voices.filter(function(v){ return v.voiceURI === voiceSelect.value; })[0] || null;
+      try{ localStorage.setItem(VOICE_STORE, voiceSelect.value); }catch(e){}
+      previewVoice();
+    };
   }
 
   // ---------- collect (words never displayed back) ----------
@@ -361,13 +445,14 @@
     return new Promise(function(resolve){
       if(!speechOK || !voiceOn.checked){ resolve(); return; }
       var u = new SpeechSynthesisUtterance(text);
-      u.rate = parseFloat(speed.value) || 0.62; u.pitch = 1;
+      if(chosenVoice){ u.voice = chosenVoice; u.lang = chosenVoice.lang; }
+      u.rate = parseFloat(speed.value) || 0.7; u.pitch = 1;
       u.onend = resolve; u.onerror = resolve;
       try{ speechSynthesis.speak(u); }catch(e){ resolve(); }
     });
   }
   function wait(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
-  function dwell(){ var r = parseFloat(speed.value) || 0.62; return Math.round(1500 / r); }
+  function dwell(){ var r = parseFloat(speed.value) || 0.7; return Math.round(1500 / r); }
 
   async function readOnce(label){
     roundLabel.textContent = label;
@@ -410,8 +495,8 @@
   readBtn.onclick = startReading;
 
   if(speechOK){
-    try{ speechSynthesis.getVoices(); }catch(e){}
-    speechSynthesis.onvoiceschanged = function(){ try{ speechSynthesis.getVoices(); }catch(e){} };
+    loadVoices();
+    speechSynthesis.onvoiceschanged = loadVoices;
   }
 
   updateCount();

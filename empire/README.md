@@ -27,6 +27,22 @@ The words are always **scrambled** into a random order before reading (guarantee
 differ from the order they were entered). Your word list is saved on the device, so a
 refresh won't lose it — only **New game** or **Clear all** clears it.
 
+## Making the voice sound better
+
+The app speaks with whatever voices are installed on your phone, and it automatically
+picks the best-sounding one it can find. If it still sounds robotic:
+
+- **In the app:** use the 🎙️ **voice dropdown** on the reading screen to try another voice
+  (it previews each one as you pick, and remembers your choice).
+- **Install a natural voice** (a one-time setting — makes the biggest difference):
+  - **iPhone/iPad:** Settings → **Accessibility** → **Spoken Content** → **Voices** →
+    **English** → pick a voice and tap the cloud icon to download the **Enhanced** or
+    **Premium** version (e.g. *Samantha (Enhanced)*, *Ava (Premium)*). Reopen the app and
+    choose it in the 🎙️ dropdown.
+  - **Android:** Settings → **Accessibility** → **Text-to-speech output** → make sure
+    **Google Text-to-speech** is the engine, then **Install voice data** → English and
+    download the higher-quality voices.
+
 ## Running it on your phone
 
 This is a self-contained web app (one folder, no server, no build, works offline).
