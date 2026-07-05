@@ -190,6 +190,7 @@
       <button class="btn big" id="readBtn" style="flex:2">▶︎ Read Aloud</button>
       <button class="btn ghost" id="stopBtn">■ Stop</button>
     </div>
+    <button class="btn ghost block" id="resetBtn" style="margin-top:10px">🔄 New game — clear all words</button>
     <div class="note" id="voiceNote"></div>
   </section>
 </div>
@@ -212,6 +213,7 @@
   var bigWord = $("bigWord"), roundBadge = $("roundBadge"), progress = $("progress");
   var roundLabel = $("roundLabel"), readBtn = $("readBtn"), stopBtn = $("stopBtn");
   var backBtn = $("backBtn"), speed = $("speed"), voiceOn = $("voiceOn"), voiceNote = $("voiceNote");
+  var resetBtn = $("resetBtn");
 
   var speechOK = ("speechSynthesis" in window);
   if(!speechOK){
@@ -253,13 +255,22 @@
   };
 
   // ---------- scramble ----------
-  function shuffle(a){
-    a = a.slice();
-    for(var i = a.length - 1; i > 0; i--){
-      var j = Math.floor(Math.random() * (i + 1));
-      var t = a[i]; a[i] = a[j]; a[j] = t;
+  // Fisher–Yates, retried so the result is actually reordered (never the
+  // same order the words were entered in, unless every word is identical).
+  function shuffle(src){
+    if(src.length < 2) return src.slice();
+    var a;
+    for(var attempt = 0; attempt < 20; attempt++){
+      a = src.slice();
+      for(var i = a.length - 1; i > 0; i--){
+        var j = Math.floor(Math.random() * (i + 1));
+        var t = a[i]; a[i] = a[j]; a[j] = t;
+      }
+      var same = true;
+      for(var k = 0; k < a.length; k++){ if(a[k] !== src[k]){ same = false; break; } }
+      if(!same) return a;
     }
-    return a;
+    return a; // all words identical — order can't differ
   }
 
   // ---------- 15s countdown ----------
@@ -309,6 +320,21 @@
     reveal.classList.add("hidden");
     collect.classList.remove("hidden");
     updateCount();
+  };
+
+  // New game: clear every word and return to a fresh collect screen.
+  resetBtn.onclick = function(){
+    if(!confirm("Start a NEW game? This clears all words.")) return;
+    stopAll();
+    words = []; scrambled = [];
+    save();
+    reveal.classList.add("hidden");
+    countdown.classList.add("hidden");
+    collect.classList.remove("hidden");
+    handoff.classList.add("hidden");
+    input.value = "";
+    updateCount();
+    input.focus();
   };
 
   // ---------- reading (scrambled, twice, slow) ----------

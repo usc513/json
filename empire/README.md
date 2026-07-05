@@ -20,8 +20,12 @@ It's a **pass-the-phone** app — no one ever sees anyone else's word until the 
    - **Skip & read now** jumps straight in; **Cancel** goes back to add more words.
    - Drag the 🐢–🐇 slider for reading speed; toggle 🔊 off to read them yourself.
    - **↻ Read Again** repeats; **Edit words** goes back to the collect screen.
+5. When the round is over, tap **🔄 New game — clear all words** to wipe everything and
+   start fresh for the next round.
 
-Your word list is saved on the device, so a refresh won't lose it.
+The words are always **scrambled** into a random order before reading (guaranteed to
+differ from the order they were entered). Your word list is saved on the device, so a
+refresh won't lose it — only **New game** or **Clear all** clears it.
 
 ## Running it on your phone
 
