@@ -28,8 +28,7 @@
   body{
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     color:var(--cream);
-    background:
-      radial-gradient(120% 90% at 50% -10%, #12583f 0%, var(--felt) 55%, #072b20 100%);
+    background:radial-gradient(120% 90% at 50% -10%, #12583f 0%, var(--felt) 55%, #072b20 100%);
     min-height:100%;
     -webkit-user-select:none;user-select:none;
     overflow:hidden;
@@ -44,23 +43,13 @@
   header .crown{font-size:26px}
   header h1{
     font-size:26px;margin:0;letter-spacing:3px;font-weight:800;
-    color:var(--gold);text-transform:uppercase;
-    text-shadow:0 1px 0 rgba(0,0,0,.4);
+    color:var(--gold);text-transform:uppercase;text-shadow:0 1px 0 rgba(0,0,0,.4);
   }
   .tag{text-align:center;font-size:13px;color:var(--gold-dim);margin:-2px 0 14px;letter-spacing:.5px}
 
   .screen{flex:1;min-height:0;display:flex;flex-direction:column}
   .hidden{display:none !important}
 
-  /* ---- Collect screen ---- */
-  .inputRow{display:flex;gap:10px;margin-bottom:12px}
-  input[type=text]{
-    flex:1;min-width:0;font-size:20px;padding:16px 16px;border-radius:var(--radius);
-    border:2px solid rgba(231,198,107,.35);background:rgba(255,255,255,.06);
-    color:var(--cream);outline:none;
-  }
-  input[type=text]::placeholder{color:rgba(244,239,225,.45)}
-  input[type=text]:focus{border-color:var(--gold)}
   button{font-family:inherit;cursor:pointer;border:none}
   .btn{
     border-radius:var(--radius);font-weight:700;font-size:18px;
@@ -69,96 +58,113 @@
   }
   .btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--gold-dim)}
   .btn.block{width:100%}
+  .btn.big{font-size:22px;padding:22px}
   .btn.ghost{background:transparent;color:var(--gold);box-shadow:none;border:2px solid rgba(231,198,107,.4)}
-  .btn.big{font-size:22px;padding:20px}
   .btn[disabled]{opacity:.4;pointer-events:none}
-  .add{width:64px;padding:0;font-size:30px;flex:none}
 
-  .count{display:flex;align-items:baseline;gap:8px;margin-bottom:6px}
+  input[type=text]{
+    width:100%;font-size:22px;padding:18px 18px;border-radius:var(--radius);
+    border:2px solid rgba(231,198,107,.35);background:rgba(255,255,255,.06);
+    color:var(--cream);outline:none;margin-bottom:14px;
+    -webkit-user-select:text;user-select:text;
+  }
+  input[type=text]::placeholder{color:rgba(244,239,225,.45)}
+  input[type=text]:focus{border-color:var(--gold)}
+
+  /* ---- Collect ---- */
+  #collect{justify-content:flex-start}
+  .collectHint{font-size:15px;color:var(--cream);opacity:.85;margin:4px 2px 12px;line-height:1.4}
+  .count{display:flex;align-items:baseline;gap:8px;margin:18px 2px 6px;justify-content:center}
   .count b{font-size:22px;color:var(--gold)}
   .count span{font-size:13px;color:var(--gold-dim)}
-
-  .list{
-    flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
-    border-radius:var(--radius);padding:6px;margin-bottom:12px;
-    background:rgba(0,0,0,.14);
+  .privacy{
+    display:flex;align-items:center;gap:8px;justify-content:center;
+    font-size:13px;color:var(--gold-dim);margin-top:2px;
   }
-  .chip{
-    display:flex;align-items:center;justify-content:space-between;gap:10px;
-    background:rgba(255,255,255,.07);border-radius:14px;padding:14px 16px;margin:6px;
-    font-size:19px;
-    animation:pop .18s ease;
+  .handoff{
+    text-align:center;font-size:19px;color:var(--gold);font-weight:700;
+    background:rgba(231,198,107,.12);border-radius:var(--radius);
+    padding:18px 16px;margin:16px 0;animation:pop .25s ease;
   }
-  @keyframes pop{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
-  .chip .w{word-break:break-word;overflow-wrap:anywhere}
-  .chip .x{
-    flex:none;width:34px;height:34px;border-radius:50%;background:rgba(192,86,63,.85);
-    color:#fff;font-size:20px;line-height:34px;text-align:center;
-  }
-  .empty{color:rgba(244,239,225,.45);text-align:center;padding:34px 20px;font-size:16px}
-
+  @keyframes pop{from{transform:scale(.92);opacity:0}to{transform:scale(1);opacity:1}}
+  .spacer{flex:1;min-height:8px}
   .footRow{display:flex;gap:10px}
   .footRow .btn{flex:1}
 
-  /* ---- Reveal screen ---- */
+  /* ---- Countdown ---- */
+  #countdown{align-items:center;justify-content:center}
+  .cdStage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+  .cdMsg{font-size:22px;color:var(--cream);margin-bottom:8px;font-weight:700}
+  .cdSub{font-size:14px;color:var(--gold-dim);margin-bottom:18px;letter-spacing:.5px}
+  .bigCount{
+    font-size:150px;font-weight:800;color:var(--gold);line-height:1;
+    text-shadow:0 3px 0 rgba(0,0,0,.35);transition:transform .15s, color .2s;
+  }
+  .bigCount.tick{transform:scale(1.12)}
+  .bigCount.urgent{color:var(--danger)}
+  .ring{
+    width:220px;height:220px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    border:6px solid rgba(231,198,107,.18);margin-bottom:26px;position:relative;
+  }
+
+  /* ---- Reveal ---- */
   .revealTop{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
   .revealTop .step{font-size:13px;color:var(--gold-dim);letter-spacing:.5px}
-  .stage{
-    flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
-    text-align:center;padding:10px;
-  }
-  .bigWord{
-    font-size:52px;font-weight:800;color:var(--cream);line-height:1.1;
-    word-break:break-word;overflow-wrap:anywhere;
-    text-shadow:0 2px 0 rgba(0,0,0,.35);
-    transition:opacity .25s;
-  }
-  .bigWord.gold{color:var(--gold)}
-  .progress{margin-top:26px;font-size:15px;color:var(--gold-dim);letter-spacing:1px}
-  .roundBadge{
-    display:inline-block;margin-top:12px;font-size:13px;padding:6px 14px;border-radius:999px;
-    background:rgba(231,198,107,.15);color:var(--gold);letter-spacing:1px;
-  }
-  .allWords{
-    margin-top:20px;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-height:34vh;overflow-y:auto;
-  }
-  .allWords .mini{
-    font-size:15px;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,.06);
-    color:rgba(244,239,225,.55);
-  }
-  .allWords .mini.on{background:var(--gold);color:var(--ink);font-weight:700}
-  .revealControls{display:flex;gap:10px;margin-top:12px}
-  .revealControls .btn{flex:1}
-
   .speedRow{display:flex;align-items:center;gap:12px;margin:6px 4px 14px;font-size:14px;color:var(--gold-dim)}
   .speedRow input[type=range]{flex:1;accent-color:var(--gold)}
   .toggle{display:flex;align-items:center;gap:8px;font-size:15px;color:var(--cream)}
+  .stage{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:10px}
+  .bigWord{
+    font-size:52px;font-weight:800;color:var(--cream);line-height:1.1;
+    word-break:break-word;overflow-wrap:anywhere;text-shadow:0 2px 0 rgba(0,0,0,.35);transition:opacity .25s;
+  }
+  .bigWord.gold{color:var(--gold)}
+  .roundBadge{display:inline-block;margin-top:14px;font-size:13px;padding:6px 14px;border-radius:999px;background:rgba(231,198,107,.15);color:var(--gold);letter-spacing:1px}
+  .progress{margin-top:10px;font-size:15px;color:var(--gold-dim);letter-spacing:1px}
+  .revealControls{display:flex;gap:10px;margin-top:12px}
+  .revealControls .btn{flex:1}
   .note{font-size:12px;color:var(--gold-dim);text-align:center;margin-top:8px;line-height:1.4}
 </style>
 </head>
 <body>
 <div class="app">
   <header><span class="crown">👑</span><h1>Empire</h1></header>
-  <div class="tag" id="tagline">Everyone say a word</div>
+  <div class="tag" id="tagline">Pass the phone — everyone add a word</div>
 
-  <!-- COLLECT -->
+  <!-- COLLECT (pass-and-play, words stay hidden) -->
   <section class="screen" id="collect">
-    <div class="inputRow">
-      <input id="wordInput" type="text" inputmode="text" autocomplete="off"
-             autocapitalize="off" placeholder="Type the word said…" enterkeyhint="done" />
-      <button class="btn add" id="addBtn" aria-label="Add">+</button>
-    </div>
+    <p class="collectHint">Type <b>your</b> word, then tap <b>Done</b> and pass the phone.
+       No one sees anyone else's word.</p>
 
-    <div class="speedRow">
-      <label class="toggle"><input type="checkbox" id="hideAdded" /> Hide words as added</label>
-    </div>
+    <input id="wordInput" type="text" inputmode="text" autocomplete="off" autocorrect="off"
+           autocapitalize="off" spellcheck="false" placeholder="Type your word…" enterkeyhint="done" />
 
-    <div class="count"><b id="countNum">0</b><span>word(s) collected</span></div>
-    <div class="list" id="list"></div>
+    <button class="btn block big" id="doneBtn">Done with my word</button>
+
+    <div class="handoff hidden" id="handoff">✓ Got it — pass the phone 👉</div>
+
+    <div class="count"><b id="countNum">0</b><span>words in</span></div>
+    <div class="privacy">🔒 kept secret until the reading</div>
+
+    <div class="spacer"></div>
 
     <div class="footRow">
-      <button class="btn ghost" id="clearBtn">Clear</button>
-      <button class="btn" id="startBtn" style="flex:2" disabled>Scramble &amp; Read →</button>
+      <button class="btn ghost" id="clearBtn">Clear all</button>
+      <button class="btn" id="startBtn" style="flex:2" disabled>Ready to start →</button>
+    </div>
+  </section>
+
+  <!-- COUNTDOWN -->
+  <section class="screen hidden" id="countdown">
+    <div class="cdStage">
+      <div class="cdMsg">Get ready…</div>
+      <div class="cdSub">reading starts automatically</div>
+      <div class="ring"><div class="bigCount" id="bigCount">15</div></div>
+    </div>
+    <div class="revealControls">
+      <button class="btn ghost" id="cancelCd">Cancel</button>
+      <button class="btn" id="skipCd" style="flex:2">Skip &amp; read now →</button>
     </div>
   </section>
 
@@ -176,8 +182,8 @@
 
     <div class="stage">
       <div class="bigWord gold" id="bigWord">Ready?</div>
-      <div class="roundBadge" id="progress">Tap Read Aloud to begin</div>
-      <div class="allWords" id="allWords"></div>
+      <div class="roundBadge" id="roundBadge">2 readings, scrambled order</div>
+      <div class="progress" id="progress"></div>
     </div>
 
     <div class="revealControls">
@@ -192,59 +198,38 @@
 (function(){
   "use strict";
 
-  // ---------- state ----------
-  var words = [];                 // collected words, in order said
-  var scrambled = [];             // shuffled for reading
+  var words = [];
+  var scrambled = [];
   var STORE = "empire_words_v1";
-
   try { words = JSON.parse(localStorage.getItem(STORE)) || []; } catch(e){ words = []; }
-
   function save(){ try{ localStorage.setItem(STORE, JSON.stringify(words)); }catch(e){} }
 
-  // ---------- elements ----------
   var $ = function(id){ return document.getElementById(id); };
-  var input = $("wordInput"), list = $("list"), countNum = $("countNum");
-  var startBtn = $("startBtn"), clearBtn = $("clearBtn"), addBtn = $("addBtn");
-  var hideAdded = $("hideAdded");
-  var collect = $("collect"), reveal = $("reveal");
-  var bigWord = $("bigWord"), progress = $("progress"), allWords = $("allWords");
+  var input = $("wordInput"), doneBtn = $("doneBtn"), handoff = $("handoff");
+  var countNum = $("countNum"), startBtn = $("startBtn"), clearBtn = $("clearBtn");
+  var collect = $("collect"), countdown = $("countdown"), reveal = $("reveal");
+  var bigCount = $("bigCount"), cancelCd = $("cancelCd"), skipCd = $("skipCd");
+  var bigWord = $("bigWord"), roundBadge = $("roundBadge"), progress = $("progress");
   var roundLabel = $("roundLabel"), readBtn = $("readBtn"), stopBtn = $("stopBtn");
   var backBtn = $("backBtn"), speed = $("speed"), voiceOn = $("voiceOn"), voiceNote = $("voiceNote");
 
   var speechOK = ("speechSynthesis" in window);
   if(!speechOK){
     voiceOn.checked = false; voiceOn.disabled = true;
-    voiceNote.textContent = "Voice not supported on this browser — words still shown on screen.";
+    voiceNote.textContent = "Voice not supported here — words still shown on screen.";
   }
 
-  // ---------- collect ----------
-  function renderList(){
+  // ---------- collect (words never displayed back) ----------
+  function updateCount(){
     countNum.textContent = words.length;
     startBtn.disabled = words.length < 2;
-    list.innerHTML = "";
-    if(words.length === 0){
-      var e = document.createElement("div");
-      e.className = "empty";
-      e.textContent = "No words yet. As each person says their word, type it and tap +";
-      list.appendChild(e);
-      return;
-    }
-    // newest on top
-    for(var i = words.length - 1; i >= 0; i--){
-      (function(idx){
-        var row = document.createElement("div");
-        row.className = "chip";
-        var w = document.createElement("span");
-        w.className = "w";
-        w.textContent = hideAdded.checked ? "•••••" : words[idx];
-        var x = document.createElement("button");
-        x.className = "x"; x.textContent = "×"; x.setAttribute("aria-label","Remove");
-        x.onclick = function(){ words.splice(idx,1); save(); renderList(); };
-        row.appendChild(w); row.appendChild(x);
-        list.appendChild(row);
-      })(i);
-    }
-    list.scrollTop = 0;
+  }
+
+  var handoffTimer = null;
+  function showHandoff(){
+    handoff.classList.remove("hidden");
+    if(handoffTimer) clearTimeout(handoffTimer);
+    handoffTimer = setTimeout(function(){ handoff.classList.add("hidden"); }, 1800);
   }
 
   function addWord(){
@@ -253,17 +238,18 @@
     words.push(v);
     save();
     input.value = "";
+    updateCount();
+    showHandoff();
     input.focus();
-    renderList();
   }
-
-  addBtn.onclick = addWord;
+  doneBtn.onclick = addWord;
   input.addEventListener("keydown", function(e){ if(e.key === "Enter"){ e.preventDefault(); addWord(); }});
-  hideAdded.onchange = renderList;
 
   clearBtn.onclick = function(){
     if(words.length && !confirm("Clear all "+words.length+" words?")) return;
-    words = []; save(); renderList();
+    words = []; save(); updateCount();
+    handoff.classList.add("hidden");
+    input.value = ""; input.focus();
   };
 
   // ---------- scramble ----------
@@ -276,42 +262,71 @@
     return a;
   }
 
+  // ---------- 15s countdown ----------
+  var cdTimer = null;
   startBtn.onclick = function(){
+    // unlock speech now (user gesture) so the auto-read after the timer can speak on iOS
+    if(speechOK && voiceOn.checked){
+      try{ var warm = new SpeechSynthesisUtterance(" "); warm.volume = 0; speechSynthesis.speak(warm); }catch(e){}
+    }
     scrambled = shuffle(words);
     collect.classList.add("hidden");
+    countdown.classList.remove("hidden");
+    var n = 15;
+    setCount(n);
+    if(cdTimer) clearInterval(cdTimer);
+    cdTimer = setInterval(function(){
+      n--;
+      if(n <= 0){ setCount(0); stopCountdown(); goReveal(); }
+      else { setCount(n); }
+    }, 1000);
+  };
+
+  function setCount(n){
+    bigCount.textContent = n;
+    bigCount.classList.toggle("urgent", n <= 5);
+    bigCount.classList.add("tick");
+    setTimeout(function(){ bigCount.classList.remove("tick"); }, 150);
+  }
+  function stopCountdown(){ if(cdTimer){ clearInterval(cdTimer); cdTimer = null; } }
+
+  cancelCd.onclick = function(){
+    stopCountdown();
+    countdown.classList.add("hidden");
+    collect.classList.remove("hidden");
+  };
+  skipCd.onclick = function(){ stopCountdown(); goReveal(); };
+
+  function goReveal(){
+    countdown.classList.add("hidden");
     reveal.classList.remove("hidden");
     resetReveal();
-    // build the mini word cloud (hidden until read)
-    allWords.innerHTML = "";
-    scrambled.forEach(function(w, i){
-      var m = document.createElement("div");
-      m.className = "mini"; m.textContent = w; m.dataset.i = i;
-      allWords.appendChild(m);
-    });
-  };
+    startReading();
+  }
 
   backBtn.onclick = function(){
     stopAll();
     reveal.classList.add("hidden");
     collect.classList.remove("hidden");
-    renderList();
+    updateCount();
   };
 
-  // ---------- reading ----------
+  // ---------- reading (scrambled, twice, slow) ----------
   var reading = false, cancelled = false;
 
   function resetReveal(){
     reading = false; cancelled = false;
     bigWord.textContent = "Ready?";
     bigWord.classList.add("gold");
-    progress.textContent = "Tap Read Aloud to begin";
-    roundLabel.textContent = "2 readings, scrambled order";
+    roundBadge.textContent = "2 readings, scrambled order";
+    progress.textContent = "";
+    roundLabel.textContent = scrambled.length + " words";
     readBtn.textContent = "▶︎ Read Aloud";
-    [].forEach.call(allWords.children, function(m){ m.classList.remove("on"); });
+    readBtn.disabled = false;
   }
-
   function stopAll(){
     cancelled = true; reading = false;
+    stopCountdown();
     if(speechOK) try{ speechSynthesis.cancel(); }catch(e){}
   }
   stopBtn.onclick = function(){ stopAll(); resetReveal(); };
@@ -320,81 +335,60 @@
     return new Promise(function(resolve){
       if(!speechOK || !voiceOn.checked){ resolve(); return; }
       var u = new SpeechSynthesisUtterance(text);
-      u.rate = parseFloat(speed.value) || 0.62;
-      u.pitch = 1;
-      u.onend = resolve;
-      u.onerror = resolve;
+      u.rate = parseFloat(speed.value) || 0.62; u.pitch = 1;
+      u.onend = resolve; u.onerror = resolve;
       try{ speechSynthesis.speak(u); }catch(e){ resolve(); }
     });
   }
+  function wait(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+  function dwell(){ var r = parseFloat(speed.value) || 0.62; return Math.round(1500 / r); }
 
-  function wait(ms){
-    return new Promise(function(res){ setTimeout(res, ms); });
-  }
-
-  // per-word on-screen dwell scales with speed slider (slower = longer)
-  function dwell(){
-    var r = parseFloat(speed.value) || 0.62;
-    return Math.round(1500 / r);   // ~2.4s at slowest, ~1.5s at fastest
-  }
-
-  async function readOnce(passLabel){
-    roundLabel.textContent = passLabel;
+  async function readOnce(label){
+    roundLabel.textContent = label;
     for(var i = 0; i < scrambled.length; i++){
       if(cancelled) return false;
-      var w = scrambled[i];
       bigWord.classList.remove("gold");
-      bigWord.textContent = w;
-      // highlight in the cloud
-      [].forEach.call(allWords.children, function(m){
-        m.classList.toggle("on", parseInt(m.dataset.i,10) === i);
-      });
+      bigWord.textContent = scrambled[i];
       progress.textContent = "Word " + (i+1) + " of " + scrambled.length;
-
-      var spoken = speak(w);
-      var dwelled = wait(dwell());
-      await Promise.all([spoken, dwelled]);   // wait for both voice & min dwell
+      await Promise.all([ speak(scrambled[i]), wait(dwell()) ]);
       if(cancelled) return false;
-      await wait(250);                          // small breath between words
+      await wait(250);
     }
     return true;
   }
 
-  readBtn.onclick = async function(){
+  async function startReading(){
     if(reading) return;
     reading = true; cancelled = false;
-    readBtn.textContent = "Reading…";
-    readBtn.disabled = true;
+    readBtn.textContent = "Reading…"; readBtn.disabled = true;
 
     var ok1 = await readOnce("Reading 1 of 2 — slowly");
     if(ok1 && !cancelled){
       bigWord.classList.add("gold");
       bigWord.textContent = "…again…";
-      progress.textContent = "Second reading";
-      [].forEach.call(allWords.children, function(m){ m.classList.remove("on"); });
+      roundBadge.textContent = "Second reading";
+      progress.textContent = "";
       await wait(1200);
       await readOnce("Reading 2 of 2 — slowly");
     }
-
     if(!cancelled){
       bigWord.classList.add("gold");
       bigWord.textContent = "Let the game begin! 👑";
-      progress.textContent = scrambled.length + " words in play";
+      roundBadge.textContent = scrambled.length + " words in play";
+      progress.textContent = "";
       roundLabel.textContent = "Both readings done";
-      [].forEach.call(allWords.children, function(m){ m.classList.add("on"); });
     }
-    readBtn.textContent = "↻ Read Again";
-    readBtn.disabled = false;
+    readBtn.textContent = "↻ Read Again"; readBtn.disabled = false;
     reading = false;
-  };
+  }
+  readBtn.onclick = startReading;
 
-  // iOS needs the voice list warmed up
   if(speechOK){
     try{ speechSynthesis.getVoices(); }catch(e){}
     speechSynthesis.onvoiceschanged = function(){ try{ speechSynthesis.getVoices(); }catch(e){} };
   }
 
-  renderList();
+  updateCount();
 })();
 </script>
 </body>

@@ -7,15 +7,19 @@ and says their word (any word they like), you type it in. When everyone has gone
 
 ## How to play with it
 
-1. Open the app on your phone.
-2. As each person says their word, type it and tap **+** (or hit Return).
-   - Turn on **Hide words as added** if you don't want people peeking at the list.
-3. When everyone's in, tap **Scramble & Read →**.
-4. Tap **▶︎ Read Aloud**. Each word shows big on screen and is spoken aloud; the whole
-   scrambled list is read through twice.
-   - Drag the 🐢–🐇 slider to set the reading speed.
-   - Toggle 🔊 off if you'd rather read them yourself and just use the big display.
-5. Tap **Edit words** to fix the list, or **↻ Read Again** for another pass.
+It's a **pass-the-phone** app — no one ever sees anyone else's word until the reading.
+
+1. Open the app and hand the phone around.
+2. Each person types **their** word and taps **Done with my word**. The field clears and a
+   "pass the phone 👉" prompt appears, so the next person never sees the previous entry.
+   (Nothing is ever displayed back — the words are not listed anywhere on screen.)
+3. When everyone's in, tap **Ready to start →**. A **15-second countdown** runs so you can
+   pass the phone to the reader and let the room settle.
+4. When the countdown hits zero the app **automatically reads the scrambled list aloud,
+   slowly, twice**. Each word also shows big on screen.
+   - **Skip & read now** jumps straight in; **Cancel** goes back to add more words.
+   - Drag the 🐢–🐇 slider for reading speed; toggle 🔊 off to read them yourself.
+   - **↻ Read Again** repeats; **Edit words** goes back to the collect screen.
 
 Your word list is saved on the device, so a refresh won't lose it.
 
