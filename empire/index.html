@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+<meta name="theme-color" content="#0b3d2e" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Empire" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="icon.png" />
+<title>Empire</title>
+<style>
+  :root{
+    --felt:#0b3d2e;
+    --felt-2:#0e4c39;
+    --gold:#e7c66b;
+    --gold-dim:#b9975b;
+    --cream:#f4efe1;
+    --ink:#08281e;
+    --danger:#c0563f;
+    --radius:18px;
+    --safe-top:env(safe-area-inset-top,0px);
+    --safe-bottom:env(safe-area-inset-bottom,0px);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--cream);
+    background:
+      radial-gradient(120% 90% at 50% -10%, #12583f 0%, var(--felt) 55%, #072b20 100%);
+    min-height:100%;
+    -webkit-user-select:none;user-select:none;
+    overflow:hidden;
+  }
+  .app{
+    display:flex;flex-direction:column;
+    height:100dvh;
+    padding:calc(var(--safe-top) + 14px) 16px calc(var(--safe-bottom) + 14px);
+    max-width:640px;margin:0 auto;
+  }
+  header{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px}
+  header .crown{font-size:26px}
+  header h1{
+    font-size:26px;margin:0;letter-spacing:3px;font-weight:800;
+    color:var(--gold);text-transform:uppercase;
+    text-shadow:0 1px 0 rgba(0,0,0,.4);
+  }
+  .tag{text-align:center;font-size:13px;color:var(--gold-dim);margin:-2px 0 14px;letter-spacing:.5px}
+
+  .screen{flex:1;min-height:0;display:flex;flex-direction:column}
+  .hidden{display:none !important}
+
+  /* ---- Collect screen ---- */
+  .inputRow{display:flex;gap:10px;margin-bottom:12px}
+  input[type=text]{
+    flex:1;min-width:0;font-size:20px;padding:16px 16px;border-radius:var(--radius);
+    border:2px solid rgba(231,198,107,.35);background:rgba(255,255,255,.06);
+    color:var(--cream);outline:none;
+  }
+  input[type=text]::placeholder{color:rgba(244,239,225,.45)}
+  input[type=text]:focus{border-color:var(--gold)}
+  button{font-family:inherit;cursor:pointer;border:none}
+  .btn{
+    border-radius:var(--radius);font-weight:700;font-size:18px;
+    padding:16px 20px;color:var(--ink);background:var(--gold);
+    box-shadow:0 4px 0 var(--gold-dim);transition:transform .05s, box-shadow .05s;
+  }
+  .btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--gold-dim)}
+  .btn.block{width:100%}
+  .btn.ghost{background:transparent;color:var(--gold);box-shadow:none;border:2px solid rgba(231,198,107,.4)}
+  .btn.big{font-size:22px;padding:20px}
+  .btn[disabled]{opacity:.4;pointer-events:none}
+  .add{width:64px;padding:0;font-size:30px;flex:none}
+
+  .count{display:flex;align-items:baseline;gap:8px;margin-bottom:6px}
+  .count b{font-size:22px;color:var(--gold)}
+  .count span{font-size:13px;color:var(--gold-dim)}
+
+  .list{
+    flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
+    border-radius:var(--radius);padding:6px;margin-bottom:12px;
+    background:rgba(0,0,0,.14);
+  }
+  .chip{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    background:rgba(255,255,255,.07);border-radius:14px;padding:14px 16px;margin:6px;
+    font-size:19px;
+    animation:pop .18s ease;
+  }
+  @keyframes pop{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+  .chip .w{word-break:break-word;overflow-wrap:anywhere}
+  .chip .x{
+    flex:none;width:34px;height:34px;border-radius:50%;background:rgba(192,86,63,.85);
+    color:#fff;font-size:20px;line-height:34px;text-align:center;
+  }
+  .empty{color:rgba(244,239,225,.45);text-align:center;padding:34px 20px;font-size:16px}
+
+  .footRow{display:flex;gap:10px}
+  .footRow .btn{flex:1}
+
+  /* ---- Reveal screen ---- */
+  .revealTop{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .revealTop .step{font-size:13px;color:var(--gold-dim);letter-spacing:.5px}
+  .stage{
+    flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:10px;
+  }
+  .bigWord{
+    font-size:52px;font-weight:800;color:var(--cream);line-height:1.1;
+    word-break:break-word;overflow-wrap:anywhere;
+    text-shadow:0 2px 0 rgba(0,0,0,.35);
+    transition:opacity .25s;
+  }
+  .bigWord.gold{color:var(--gold)}
+  .progress{margin-top:26px;font-size:15px;color:var(--gold-dim);letter-spacing:1px}
+  .roundBadge{
+    display:inline-block;margin-top:12px;font-size:13px;padding:6px 14px;border-radius:999px;
+    background:rgba(231,198,107,.15);color:var(--gold);letter-spacing:1px;
+  }
+  .allWords{
+    margin-top:20px;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-height:34vh;overflow-y:auto;
+  }
+  .allWords .mini{
+    font-size:15px;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,.06);
+    color:rgba(244,239,225,.55);
+  }
+  .allWords .mini.on{background:var(--gold);color:var(--ink);font-weight:700}
+  .revealControls{display:flex;gap:10px;margin-top:12px}
+  .revealControls .btn{flex:1}
+
+  .speedRow{display:flex;align-items:center;gap:12px;margin:6px 4px 14px;font-size:14px;color:var(--gold-dim)}
+  .speedRow input[type=range]{flex:1;accent-color:var(--gold)}
+  .toggle{display:flex;align-items:center;gap:8px;font-size:15px;color:var(--cream)}
+  .note{font-size:12px;color:var(--gold-dim);text-align:center;margin-top:8px;line-height:1.4}
+</style>
+</head>
+<body>
+<div class="app">
+  <header><span class="crown">👑</span><h1>Empire</h1></header>
+  <div class="tag" id="tagline">Everyone say a word</div>
+
+  <!-- COLLECT -->
+  <section class="screen" id="collect">
+    <div class="inputRow">
+      <input id="wordInput" type="text" inputmode="text" autocomplete="off"
+             autocapitalize="words" placeholder="Type the word said…" enterkeyhint="done" />
+      <button class="btn add" id="addBtn" aria-label="Add">+</button>
+    </div>
+
+    <div class="speedRow">
+      <label class="toggle"><input type="checkbox" id="hideAdded" /> Hide words as added</label>
+    </div>
+
+    <div class="count"><b id="countNum">0</b><span>word(s) collected</span></div>
+    <div class="list" id="list"></div>
+
+    <div class="footRow">
+      <button class="btn ghost" id="clearBtn">Clear</button>
+      <button class="btn" id="startBtn" style="flex:2" disabled>Scramble &amp; Read →</button>
+    </div>
+  </section>
+
+  <!-- REVEAL -->
+  <section class="screen hidden" id="reveal">
+    <div class="revealTop">
+      <span class="step" id="roundLabel">Reading 1 of 2</span>
+      <button class="btn ghost" id="backBtn" style="padding:8px 14px;font-size:14px">Edit words</button>
+    </div>
+
+    <div class="speedRow">
+      🐢 <input type="range" id="speed" min="0.4" max="1" step="0.05" value="0.62" /> 🐇
+      <label class="toggle" style="flex:none"><input type="checkbox" id="voiceOn" checked /> 🔊</label>
+    </div>
+
+    <div class="stage">
+      <div class="bigWord gold" id="bigWord">Ready?</div>
+      <div class="roundBadge" id="progress">Tap Read Aloud to begin</div>
+      <div class="allWords" id="allWords"></div>
+    </div>
+
+    <div class="revealControls">
+      <button class="btn big" id="readBtn" style="flex:2">▶︎ Read Aloud</button>
+      <button class="btn ghost" id="stopBtn">■ Stop</button>
+    </div>
+    <div class="note" id="voiceNote"></div>
+  </section>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- state ----------
+  var words = [];                 // collected words, in order said
+  var scrambled = [];             // shuffled for reading
+  var STORE = "empire_words_v1";
+
+  try { words = JSON.parse(localStorage.getItem(STORE)) || []; } catch(e){ words = []; }
+
+  function save(){ try{ localStorage.setItem(STORE, JSON.stringify(words)); }catch(e){} }
+
+  // ---------- elements ----------
+  var $ = function(id){ return document.getElementById(id); };
+  var input = $("wordInput"), list = $("list"), countNum = $("countNum");
+  var startBtn = $("startBtn"), clearBtn = $("clearBtn"), addBtn = $("addBtn");
+  var hideAdded = $("hideAdded");
+  var collect = $("collect"), reveal = $("reveal");
+  var bigWord = $("bigWord"), progress = $("progress"), allWords = $("allWords");
+  var roundLabel = $("roundLabel"), readBtn = $("readBtn"), stopBtn = $("stopBtn");
+  var backBtn = $("backBtn"), speed = $("speed"), voiceOn = $("voiceOn"), voiceNote = $("voiceNote");
+
+  var speechOK = ("speechSynthesis" in window);
+  if(!speechOK){
+    voiceOn.checked = false; voiceOn.disabled = true;
+    voiceNote.textContent = "Voice not supported on this browser — words still shown on screen.";
+  }
+
+  // ---------- collect ----------
+  function renderList(){
+    countNum.textContent = words.length;
+    startBtn.disabled = words.length < 2;
+    list.innerHTML = "";
+    if(words.length === 0){
+      var e = document.createElement("div");
+      e.className = "empty";
+      e.textContent = "No words yet. As each person says their word, type it and tap +";
+      list.appendChild(e);
+      return;
+    }
+    // newest on top
+    for(var i = words.length - 1; i >= 0; i--){
+      (function(idx){
+        var row = document.createElement("div");
+        row.className = "chip";
+        var w = document.createElement("span");
+        w.className = "w";
+        w.textContent = hideAdded.checked ? "•••••" : words[idx];
+        var x = document.createElement("button");
+        x.className = "x"; x.textContent = "×"; x.setAttribute("aria-label","Remove");
+        x.onclick = function(){ words.splice(idx,1); save(); renderList(); };
+        row.appendChild(w); row.appendChild(x);
+        list.appendChild(row);
+      })(i);
+    }
+    list.scrollTop = 0;
+  }
+
+  function addWord(){
+    var v = (input.value || "").trim().replace(/\s+/g," ");
+    if(!v) return;
+    words.push(v);
+    save();
+    input.value = "";
+    input.focus();
+    renderList();
+  }
+
+  addBtn.onclick = addWord;
+  input.addEventListener("keydown", function(e){ if(e.key === "Enter"){ e.preventDefault(); addWord(); }});
+  hideAdded.onchange = renderList;
+
+  clearBtn.onclick = function(){
+    if(words.length && !confirm("Clear all "+words.length+" words?")) return;
+    words = []; save(); renderList();
+  };
+
+  // ---------- scramble ----------
+  function shuffle(a){
+    a = a.slice();
+    for(var i = a.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
+  startBtn.onclick = function(){
+    scrambled = shuffle(words);
+    collect.classList.add("hidden");
+    reveal.classList.remove("hidden");
+    resetReveal();
+    // build the mini word cloud (hidden until read)
+    allWords.innerHTML = "";
+    scrambled.forEach(function(w, i){
+      var m = document.createElement("div");
+      m.className = "mini"; m.textContent = w; m.dataset.i = i;
+      allWords.appendChild(m);
+    });
+  };
+
+  backBtn.onclick = function(){
+    stopAll();
+    reveal.classList.add("hidden");
+    collect.classList.remove("hidden");
+    renderList();
+  };
+
+  // ---------- reading ----------
+  var reading = false, cancelled = false;
+
+  function resetReveal(){
+    reading = false; cancelled = false;
+    bigWord.textContent = "Ready?";
+    bigWord.classList.add("gold");
+    progress.textContent = "Tap Read Aloud to begin";
+    roundLabel.textContent = "2 readings, scrambled order";
+    readBtn.textContent = "▶︎ Read Aloud";
+    [].forEach.call(allWords.children, function(m){ m.classList.remove("on"); });
+  }
+
+  function stopAll(){
+    cancelled = true; reading = false;
+    if(speechOK) try{ speechSynthesis.cancel(); }catch(e){}
+  }
+  stopBtn.onclick = function(){ stopAll(); resetReveal(); };
+
+  function speak(text){
+    return new Promise(function(resolve){
+      if(!speechOK || !voiceOn.checked){ resolve(); return; }
+      var u = new SpeechSynthesisUtterance(text);
+      u.rate = parseFloat(speed.value) || 0.62;
+      u.pitch = 1;
+      u.onend = resolve;
+      u.onerror = resolve;
+      try{ speechSynthesis.speak(u); }catch(e){ resolve(); }
+    });
+  }
+
+  function wait(ms){
+    return new Promise(function(res){ setTimeout(res, ms); });
+  }
+
+  // per-word on-screen dwell scales with speed slider (slower = longer)
+  function dwell(){
+    var r = parseFloat(speed.value) || 0.62;
+    return Math.round(1500 / r);   // ~2.4s at slowest, ~1.5s at fastest
+  }
+
+  async function readOnce(passLabel){
+    roundLabel.textContent = passLabel;
+    for(var i = 0; i < scrambled.length; i++){
+      if(cancelled) return false;
+      var w = scrambled[i];
+      bigWord.classList.remove("gold");
+      bigWord.textContent = w;
+      // highlight in the cloud
+      [].forEach.call(allWords.children, function(m){
+        m.classList.toggle("on", parseInt(m.dataset.i,10) === i);
+      });
+      progress.textContent = "Word " + (i+1) + " of " + scrambled.length;
+
+      var spoken = speak(w);
+      var dwelled = wait(dwell());
+      await Promise.all([spoken, dwelled]);   // wait for both voice & min dwell
+      if(cancelled) return false;
+      await wait(250);                          // small breath between words
+    }
+    return true;
+  }
+
+  readBtn.onclick = async function(){
+    if(reading) return;
+    reading = true; cancelled = false;
+    readBtn.textContent = "Reading…";
+    readBtn.disabled = true;
+
+    var ok1 = await readOnce("Reading 1 of 2 — slowly");
+    if(ok1 && !cancelled){
+      bigWord.classList.add("gold");
+      bigWord.textContent = "…again…";
+      progress.textContent = "Second reading";
+      [].forEach.call(allWords.children, function(m){ m.classList.remove("on"); });
+      await wait(1200);
+      await readOnce("Reading 2 of 2 — slowly");
+    }
+
+    if(!cancelled){
+      bigWord.classList.add("gold");
+      bigWord.textContent = "Let the game begin! 👑";
+      progress.textContent = scrambled.length + " words in play";
+      roundLabel.textContent = "Both readings done";
+      [].forEach.call(allWords.children, function(m){ m.classList.add("on"); });
+    }
+    readBtn.textContent = "↻ Read Again";
+    readBtn.disabled = false;
+    reading = false;
+  };
+
+  // iOS needs the voice list warmed up
+  if(speechOK){
+    try{ speechSynthesis.getVoices(); }catch(e){}
+    speechSynthesis.onvoiceschanged = function(){ try{ speechSynthesis.getVoices(); }catch(e){} };
+  }
+
+  renderList();
+})();
+</script>
+</body>
+</html>

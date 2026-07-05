@@ -1,0 +1,13 @@
+{
+  "name": "Empire",
+  "short_name": "Empire",
+  "description": "Collect everyone's word, scramble the order, and read them aloud slowly twice.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b3d2e",
+  "theme_color": "#0b3d2e",
+  "icons": [
+    { "src": "icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
