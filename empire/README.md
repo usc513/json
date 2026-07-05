@@ -1,9 +1,9 @@
 # 👑 Empire
 
 A phone-friendly app for running the party game **Empire**. As each person stands up
-and says their word, you type it in. When everyone has gone, tap **Scramble & Read** —
-the app shuffles the order and reads the whole list aloud **slowly, twice**, so the
-whole room hears the pool of words before the guessing begins.
+and says their word (any word they like), you type it in. When everyone has gone, tap
+**Scramble & Read** — the app shuffles the order and reads the whole list aloud
+**slowly, twice**, so the whole room hears the pool of words before the guessing begins.
 
 ## How to play with it
 
