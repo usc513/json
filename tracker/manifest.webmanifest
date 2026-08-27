@@ -1,0 +1,19 @@
+{
+  "name": "Trial Tracker",
+  "short_name": "Trial",
+  "description": "Personal clinical-trial medication and side-effect tracker.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b1220",
+  "theme_color": "#0b1220",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
