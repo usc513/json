@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+  <meta name="theme-color" content="#0b1220" />
+
+  <title>Trial Tracker</title>
+  <meta name="description" content="Personal clinical-trial medication and side-effect tracker." />
+
+  <!-- PWA / iOS home-screen app -->
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Trial Tracker" />
+  <link rel="apple-touch-icon" href="icon.svg" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app">
+    <header class="app-header">
+      <div class="app-header-row">
+        <h1 id="screen-title">Today</h1>
+        <span id="today-date" class="today-date"></span>
+      </div>
+    </header>
+
+    <main id="main">
+      <!-- ===================== TODAY ===================== -->
+      <section class="screen" data-screen="today">
+        <!-- Next dose card -->
+        <div class="card next-dose-card" id="next-dose-card">
+          <div class="next-dose-label" id="next-dose-label">Next dose</div>
+          <div class="next-dose-time" id="next-dose-time">—</div>
+          <div class="next-dose-countdown" id="next-dose-countdown"></div>
+          <div class="next-dose-window" id="next-dose-window"></div>
+          <div class="fasting-note" id="fasting-note"></div>
+          <button class="btn btn-primary btn-big" id="log-now-btn">Log dose now</button>
+        </div>
+
+        <!-- Today's doses -->
+        <div class="card">
+          <div class="card-title-row">
+            <h2 class="card-title">Today&rsquo;s doses</h2>
+            <span class="pill" id="doses-progress">0 / 2</span>
+          </div>
+          <ul class="dose-slots" id="dose-slots"></ul>
+        </div>
+
+        <!-- Quick side effect -->
+        <div class="card">
+          <h2 class="card-title">Felt a side effect?</h2>
+          <p class="muted small">Tap to log it with the time auto-filled.</p>
+          <button class="btn btn-warn btn-big" id="quick-se-btn">Log a side effect</button>
+        </div>
+
+        <!-- Quick food / meal -->
+        <div class="card">
+          <h2 class="card-title">Log food</h2>
+          <p class="muted small">Track what &amp; how much you ate &mdash; helps you respect the no-food window before each dose.</p>
+          <button class="btn btn-big" id="quick-meal-btn">Add food</button>
+        </div>
+
+        <!-- Quick note / observation -->
+        <div class="card">
+          <h2 class="card-title">Note an observation</h2>
+          <p class="muted small">Anything your doctor asked you to watch &mdash; e.g. chills, and a body-temperature reading.</p>
+          <button class="btn btn-big" id="quick-note-btn">Add a note</button>
+        </div>
+
+        <!-- Today side effects summary -->
+        <div class="card" id="today-se-card" hidden>
+          <h2 class="card-title">Logged today</h2>
+          <ul class="event-list" id="today-se-list"></ul>
+        </div>
+
+        <!-- Stand-up / lightheaded detector -->
+        <div class="card">
+          <div class="card-title-row">
+            <h2 class="card-title">Stand-up detector</h2>
+            <label class="switch">
+              <input type="checkbox" id="motion-toggle" />
+              <span class="slider"></span>
+            </label>
+          </div>
+          <p class="muted small" id="motion-status">
+            Off. When on (and this app is open), a sudden rise from sitting will
+            prompt you to rate any lightheadedness.
+          </p>
+        </div>
+      </section>
+
+      <!-- ===================== HISTORY ===================== -->
+      <section class="screen" data-screen="history" hidden>
+        <div class="card">
+          <div class="card-title-row">
+            <h2 class="card-title">History</h2>
+            <select id="history-filter" class="select">
+              <option value="all">All events</option>
+              <option value="dose">Doses only</option>
+              <option value="sideEffect">Side effects only</option>
+              <option value="meal">Food only</option>
+              <option value="note">Notes only</option>
+            </select>
+          </div>
+          <div id="history-body"></div>
+        </div>
+      </section>
+
+      <!-- ===================== STATS ===================== -->
+      <section class="screen" data-screen="stats" hidden>
+        <div class="card">
+          <h2 class="card-title">Last 7 days</h2>
+          <div class="stat-grid">
+            <div class="stat"><div class="stat-num" id="stat-adherence">—</div><div class="stat-label">Dose adherence</div></div>
+            <div class="stat"><div class="stat-num" id="stat-doses">—</div><div class="stat-label">Doses logged</div></div>
+            <div class="stat"><div class="stat-num" id="stat-se">—</div><div class="stat-label">Side effects</div></div>
+            <div class="stat"><div class="stat-num" id="stat-avg-int">—</div><div class="stat-label">Avg intensity</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <h2 class="card-title">Most common side effects</h2>
+          <ul class="bar-list" id="se-breakdown"></ul>
+        </div>
+        <div class="card">
+          <h2 class="card-title">Share with your trial team</h2>
+          <p class="muted small">Export a clean copy of your log for your study coordinator.</p>
+          <div class="btn-row">
+            <button class="btn" id="export-csv">Export CSV</button>
+            <button class="btn" id="export-json">Export JSON (backup)</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== SETTINGS ===================== -->
+      <section class="screen" data-screen="settings" hidden>
+        <div class="card">
+          <h2 class="card-title">Medication</h2>
+          <label class="field">
+            <span>Dose amount (mg)</span>
+            <input type="number" id="set-mg" inputmode="numeric" />
+          </label>
+          <label class="field">
+            <span>Doses per day</span>
+            <input type="number" id="set-per-day" min="1" max="6" inputmode="numeric" />
+          </label>
+          <div id="set-times-wrap"></div>
+          <label class="field">
+            <span>Flex window (hours)</span>
+            <input type="number" id="set-flex" min="0" max="12" step="0.5" inputmode="decimal" />
+          </label>
+          <label class="field">
+            <span>No food before dose (hours)</span>
+            <input type="number" id="set-fast" min="0" max="6" step="0.5" inputmode="decimal" />
+          </label>
+        </div>
+
+        <div class="card">
+          <h2 class="card-title">Side-effect types</h2>
+          <p class="muted small">These appear as quick buttons when logging. One per line.</p>
+          <textarea id="set-se-types" rows="7" class="textarea"></textarea>
+        </div>
+
+        <div class="card">
+          <h2 class="card-title">Reminders on iPhone</h2>
+          <p class="muted small">
+            Dependable scheduled reminders come from Apple Shortcuts, not the web.
+            See the setup guide bundled with this app (README) — it takes about 3
+            minutes and will nudge you at each dose time and for side-effect check-ins.
+          </p>
+        </div>
+
+        <div class="card">
+          <h2 class="card-title">Data</h2>
+          <div class="btn-row">
+            <button class="btn" id="import-json">Import backup</button>
+            <button class="btn btn-danger" id="reset-data">Erase all data</button>
+          </div>
+          <input type="file" id="import-file" accept="application/json" hidden />
+        </div>
+
+        <button class="btn btn-primary btn-big" id="save-settings">Save settings</button>
+      </section>
+    </main>
+
+    <!-- ===================== BOTTOM NAV ===================== -->
+    <nav class="tabbar">
+      <button class="tab active" data-go="today"><span class="tab-ico">●</span>Today</button>
+      <button class="tab" data-go="history"><span class="tab-ico">≡</span>History</button>
+      <button class="tab" data-go="stats"><span class="tab-ico">▢</span>Stats</button>
+      <button class="tab" data-go="settings"><span class="tab-ico">⚙</span>Settings</button>
+    </nav>
+  </div>
+
+  <!-- ===================== DOSE SHEET ===================== -->
+  <div class="sheet-backdrop" id="dose-sheet" hidden>
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <h2 class="sheet-title">Log a dose</h2>
+      <label class="field">
+        <span>Date &amp; time taken</span>
+        <input type="datetime-local" id="dose-when" />
+      </label>
+      <label class="field">
+        <span>Amount (mg)</span>
+        <input type="number" id="dose-mg" inputmode="numeric" />
+      </label>
+      <label class="field">
+        <span>Note (optional)</span>
+        <input type="text" id="dose-note" placeholder="e.g. with breakfast" />
+      </label>
+      <div class="sheet-actions">
+        <button class="btn btn-ghost" data-close-sheet="dose-sheet">Cancel</button>
+        <button class="btn btn-primary" id="save-dose">Save dose</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== SIDE-EFFECT SHEET ===================== -->
+  <div class="sheet-backdrop" id="se-sheet" hidden>
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <h2 class="sheet-title">Log a side effect</h2>
+      <label class="field">
+        <span>When did it happen?</span>
+        <input type="datetime-local" id="se-when" />
+      </label>
+      <span class="field-label">Type</span>
+      <div class="chip-grid" id="se-type-chips"></div>
+      <input type="text" id="se-type-other" class="text-input" placeholder="Or type another…" />
+      <span class="field-label">Intensity: <strong id="se-int-val">5</strong> / 10</span>
+      <input type="range" id="se-int" min="1" max="10" value="5" class="range" />
+      <div class="range-legend"><span>1 · barely noticeable</span><span>10 · passed out</span></div>
+      <label class="field">
+        <span>Note (optional)</span>
+        <input type="text" id="se-note" placeholder="What were you doing?" />
+      </label>
+      <div class="sheet-actions">
+        <button class="btn btn-ghost" data-close-sheet="se-sheet">Cancel</button>
+        <button class="btn btn-warn" id="save-se">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== MEAL SHEET ===================== -->
+  <div class="sheet-backdrop" id="meal-sheet" hidden>
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <h2 class="sheet-title">Log food</h2>
+      <div class="fasting-note" id="meal-fast-warn"></div>
+      <label class="field">
+        <span>When did you eat?</span>
+        <input type="datetime-local" id="meal-when" />
+      </label>
+      <label class="field">
+        <span>What did you eat?</span>
+        <input type="text" id="meal-food" placeholder="e.g. Oatmeal and coffee" />
+      </label>
+      <span class="field-label">How much?</span>
+      <div class="chip-grid" id="meal-portion-chips"></div>
+      <input type="text" id="meal-amount-other" class="text-input" placeholder="Or describe (e.g. 1 cup, half a sandwich)…" />
+      <div class="sheet-actions">
+        <button class="btn btn-ghost" data-close-sheet="meal-sheet">Cancel</button>
+        <button class="btn btn-primary" id="save-meal">Save food</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== NOTE SHEET ===================== -->
+  <div class="sheet-backdrop" id="note-sheet" hidden>
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <h2 class="sheet-title">Add a note</h2>
+      <label class="field">
+        <span>When</span>
+        <input type="datetime-local" id="note-when" />
+      </label>
+      <span class="field-label">Quick tags (optional)</span>
+      <div class="chip-grid" id="note-tag-chips"></div>
+      <label class="field">
+        <span>Note</span>
+        <textarea id="note-text" rows="3" class="textarea" placeholder="e.g. Got the chills around lunch."></textarea>
+      </label>
+      <label class="field">
+        <span>Body temperature (optional)</span>
+        <span class="temp-row">
+          <input type="number" id="note-temp" inputmode="decimal" step="0.1" placeholder="98.6" />
+          <select id="note-temp-unit" class="select temp-unit">
+            <option value="F">&deg;F</option>
+            <option value="C">&deg;C</option>
+          </select>
+        </span>
+      </label>
+      <div class="sheet-actions">
+        <button class="btn btn-ghost" data-close-sheet="note-sheet">Cancel</button>
+        <button class="btn btn-primary" id="save-note">Save note</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
